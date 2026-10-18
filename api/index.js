@@ -1,15 +1,16 @@
-const express = require('express');
-const fs = require('fs-extra');
-const path = require('path');
-const matter = require('gray-matter');
-const os = require('os');
+import express from 'express';
+import fs from 'fs-extra';
+import path from 'path';
+import matter from 'gray-matter';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // Use local agents directory in the repository
 const agentsDir = process.env.NODE_ENV === 'production'
   ? path.join(__dirname, '../agents')
-  : path.join(os.homedir(), '.claude', 'agents');
+  : path.join(process.env.HOME || process.env.USERPROFILE || '', '.claude', 'agents');
 
 // Middleware
 app.use(express.json());
@@ -99,4 +100,14 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-module.exports = app;
+// Catch-all for static files
+app.use((req, res, next) => {
+  const filePath = path.join(__dirname, '../public', req.path);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ error: 'Not found' });
+  }
+});
+
+export default app;

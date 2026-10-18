@@ -2,6 +2,7 @@
   "name": "agents-dashboard",
   "version": "1.0.0",
   "description": "Personal dashboard to view and manage AI agents",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
