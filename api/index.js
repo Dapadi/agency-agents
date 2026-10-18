@@ -14,7 +14,8 @@ const agentsDir = process.env.NODE_ENV === 'production'
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../public')));
+const publicDir = path.join(__dirname, '../public');
+app.use(express.static(publicDir));
 
 // Load all agents
 async function loadAgents() {
@@ -55,59 +56,63 @@ async function loadAgents() {
 
 function extractDivision(filename) {
   const parts = filename.split('-');
-  if (parts.length > 0) {
-    return parts[0];
-  }
-  return 'other';
+  return parts.length > 0 ? parts[0] : 'other';
 }
 
 // API Routes
 app.get('/api/agents', async (req, res) => {
-  const agents = await loadAgents();
-  res.json(agents);
+  try {
+    const agents = await loadAgents();
+    res.json(agents);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load agents' });
+  }
 });
 
 app.get('/api/agents/:id', async (req, res) => {
-  const agents = await loadAgents();
-  const agent = agents.find(a => a.id === req.params.id);
+  try {
+    const agents = await loadAgents();
+    const agent = agents.find(a => a.id === req.params.id);
 
-  if (!agent) {
-    return res.status(404).json({ error: 'Agent not found' });
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    res.json(agent);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load agent' });
   }
-
-  res.json(agent);
 });
 
 app.get('/api/stats', async (req, res) => {
-  const agents = await loadAgents();
-  const divisions = {};
+  try {
+    const agents = await loadAgents();
+    const divisions = {};
 
-  agents.forEach(agent => {
-    if (!divisions[agent.division]) {
-      divisions[agent.division] = 0;
-    }
-    divisions[agent.division]++;
-  });
+    agents.forEach(agent => {
+      if (!divisions[agent.division]) {
+        divisions[agent.division] = 0;
+      }
+      divisions[agent.division]++;
+    });
 
-  res.json({
-    totalAgents: agents.length,
-    divisions
-  });
-});
-
-// Serve static files
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-// Catch-all for static files
-app.use((req, res, next) => {
-  const filePath = path.join(__dirname, '../public', req.path);
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).json({ error: 'Not found' });
+    res.json({
+      totalAgents: agents.length,
+      divisions
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load stats' });
   }
+});
+
+// Serve index.html for root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
+
+// 404 fallback
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not found' });
 });
 
 export default app;
