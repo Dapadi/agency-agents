@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency Agents — Tu equipo especializado de IA</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="site">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-inner">
+                <div class="logo">Agency</div>
+                <div class="nav-stats">
+                    <span class="stat-badge"><span id="totalAgents">282</span> agentes</span>
+                    <span class="stat-badge"><span id="totalDivisions">63</span> divisiones</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-inner">
+                <h1>Tu equipo especializado de IA</h1>
+                <p class="hero-subtitle">282 agentes profesionales, 63 especialidades, una dashboard para controlarlos todos</p>
+
+                <!-- Live Search Thing -->
+                <div class="search-hero">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Busca por nombre, especialidad..."
+                        class="search-input-hero"
+                        aria-label="Buscar agentes"
+                    >
+                    <button class="search-btn" aria-label="Buscar">
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="section-inner">
+                <div class="stats-grid" id="statsContainer">
+                    <div class="stat-card">
+                        <div class="stat-number">282</div>
+                        <div class="stat-label">Agentes instalados</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">63</div>
+                        <div class="stat-label">Divisiones especializadas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Listo para usar</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controls Section -->
+        <section class="filter-section">
+            <div class="section-inner">
+                <div class="filter-bar">
+                    <label for="divisionFilter" class="filter-label">Filtrar por división:</label>
+                    <select id="divisionFilter" class="division-select">
+                        <option value="">Todas las divisiones</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agents Section -->
+        <section class="agents-section">
+            <div class="section-inner">
+                <div class="agents-grid" id="agentsGrid">
+                    <div class="loading">Cargando agentes...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="section-inner">
+                <p>Agency Agents Dashboard — Una forma más inteligente de gestionar tus agentes de IA</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Cerrar">&times;</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
