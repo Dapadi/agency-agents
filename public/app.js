@@ -9,7 +9,7 @@ const divisionFilter = document.getElementById('divisionFilter');
 const statsContainer = document.getElementById('statsContainer');
 const modal = document.getElementById('modal');
 const modalBody = document.getElementById('modalBody');
-const closeBtn = document.querySelector('.close');
+const closeBtn = document.querySelector('.modal-close');
 
 // Event Listeners
 searchInput.addEventListener('input', filterAgents);
