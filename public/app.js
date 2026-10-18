@@ -2,6 +2,16 @@
 let allAgents = [];
 let filteredAgents = [];
 
+// Ensure DOM is ready before attaching listeners
+function initializeEventListeners() {
+  if (searchInput) searchInput.addEventListener('input', filterAgents);
+  if (divisionFilter) divisionFilter.addEventListener('change', filterAgents);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+}
+
 // DOM Elements
 const agentsGrid = document.getElementById('agentsGrid');
 const searchInput = document.getElementById('searchInput');
@@ -11,13 +21,8 @@ const modal = document.getElementById('modal');
 const modalBody = document.getElementById('modalBody');
 const closeBtn = document.querySelector('.modal-close');
 
-// Event Listeners
-searchInput.addEventListener('input', filterAgents);
-divisionFilter.addEventListener('change', filterAgents);
-closeBtn.addEventListener('click', closeModal);
-window.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-});
+// Event Listeners - initialized after DOM is ready
+window.addEventListener('DOMContentLoaded', initializeEventListeners);
 
 // Initialize
 async function init() {
@@ -194,5 +199,9 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Start app
-init();
+// Start app when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
