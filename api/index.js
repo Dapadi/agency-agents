@@ -6,7 +6,10 @@ const os = require('os');
 
 const app = express();
 
-const agentsDir = path.join(os.homedir(), '.claude', 'agents');
+// Use local agents directory in the repository
+const agentsDir = process.env.NODE_ENV === 'production'
+  ? path.join(__dirname, '../agents')
+  : path.join(os.homedir(), '.claude', 'agents');
 
 // Middleware
 app.use(express.json());
