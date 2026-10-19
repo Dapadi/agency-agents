@@ -13,8 +13,8 @@
             <div class="nav-inner">
                 <div class="logo">Agency</div>
                 <div class="nav-stats">
-                    <span class="stat-badge"><span id="totalAgents">282</span> agentes</span>
-                    <span class="stat-badge"><span id="totalDivisions">63</span> divisiones</span>
+                    <span class="stat-badge"><span id="totalAgents">0</span> agentes</span>
+                    <span class="stat-badge"><span id="totalDivisions">0</span> divisiones</span>
                 </div>
             </div>
         </nav>
@@ -69,6 +69,7 @@
                     <select id="divisionFilter" class="division-select">
                         <option value="">Todas las divisiones</option>
                     </select>
+                    <button id="newAgentBtn" class="btn btn-primary" hidden>+ Nuevo agente</button>
                 </div>
             </div>
         </section>
@@ -96,6 +97,30 @@
         <div class="modal-content">
             <button class="modal-close" aria-label="Cerrar">&times;</button>
             <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Editor (create / edit raw agent file) -->
+    <div id="editorModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="editorClose" aria-label="Cerrar">&times;</button>
+            <form id="editorForm" class="editor-form">
+                <h2 id="editorTitle">Nuevo agente</h2>
+                <label class="editor-field" id="editorIdField">
+                    <span>ID (nombre del archivo, p. ej. <code>engineering-mi-agente</code>)</span>
+                    <input type="text" id="editorId" pattern="[a-z0-9][a-z0-9-]*" required>
+                </label>
+                <label class="editor-field">
+                    <span>Contenido completo (frontmatter YAML + markdown)</span>
+                    <textarea id="editorContent" rows="22" spellcheck="false" required></textarea>
+                </label>
+                <p class="editor-error" id="editorError" role="alert"></p>
+                <div class="editor-actions">
+                    <button type="button" class="btn btn-secondary" id="editorCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 

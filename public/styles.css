@@ -598,3 +598,70 @@ p {
         display: none;
     }
 }
+/* Agent management */
+[hidden] {
+    display: none !important;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #ffffff;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+.admin-actions,
+.editor-actions {
+    display: flex;
+    gap: var(--space-xs);
+    flex-wrap: wrap;
+    margin-top: var(--space-md);
+}
+
+.editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.editor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: var(--size-sm);
+    color: var(--ink-secondary);
+}
+
+.editor-field input,
+.editor-field textarea {
+    font: inherit;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--size-sm);
+    color: var(--ink);
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--ground);
+    resize: vertical;
+}
+
+.editor-field input:read-only {
+    background: var(--ground-alt);
+}
+
+.editor-error {
+    color: #dc2626;
+    font-size: var(--size-sm);
+    min-height: 1em;
+    margin: 0;
+}
+
+#newAgentBtn {
+    flex: 0 0 auto;
+    width: auto;
+    white-space: nowrap;
+    margin-left: auto;
+}
