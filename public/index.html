@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agency Agents — Tu equipo especializado de IA</title>
+    <title>Agency Agents — Panel de control</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="site">
+    <!-- Login -->
+    <main id="loginView" class="login" hidden>
+        <form id="loginForm" class="login-card">
+            <div class="logo">Agency</div>
+            <h1>Acceso al panel</h1>
+            <p class="login-hint" id="loginHint">Introduce la contraseña del panel.</p>
+            <label for="passwordInput" class="visually-hidden">Contraseña</label>
+            <input type="password" id="passwordInput" class="login-input" autocomplete="current-password" required>
+            <div class="form-error" id="loginError" role="alert"></div>
+            <button type="submit" class="btn btn-primary login-submit">Entrar</button>
+        </form>
+    </main>
+
+    <div class="site" id="appView" hidden>
         <!-- Navigation -->
         <nav class="nav">
             <div class="nav-inner">
@@ -15,6 +28,7 @@
                 <div class="nav-stats">
                     <span class="stat-badge"><span id="totalAgents">—</span> agentes</span>
                     <span class="stat-badge"><span id="totalDivisions">—</span> divisiones</span>
+                    <button class="btn btn-secondary btn-small" id="logoutBtn" type="button">Salir</button>
                 </div>
             </div>
         </nav>
@@ -23,7 +37,7 @@
         <section class="hero">
             <div class="hero-inner">
                 <h1>Tu equipo especializado de IA</h1>
-                <p class="hero-subtitle">Agentes profesionales por especialidad, con una sola interfaz para buscarlos, revisarlos y copiarlos</p>
+                <p class="hero-subtitle">Busca, revisa, edita y elimina tus agentes. Los cambios se guardan en GitHub.</p>
 
                 <div class="search-hero">
                     <input
@@ -40,38 +54,59 @@
             </div>
         </section>
 
-        <!-- Stats Section -->
-        <section class="stats-section">
-            <div class="section-inner">
-                <div class="stats-grid" id="statsContainer"></div>
+        <!-- Tabs -->
+        <nav class="tabs" aria-label="Secciones">
+            <div class="section-inner tabs-inner">
+                <button class="tab is-active" type="button" data-tab="agents" aria-selected="true">Agentes</button>
+                <button class="tab" type="button" data-tab="tasks" aria-selected="false">Tareas programadas</button>
             </div>
-        </section>
+        </nav>
 
-        <!-- Controls Section -->
-        <section class="filter-section">
-            <div class="section-inner">
-                <div class="filter-bar">
-                    <label for="divisionFilter" class="filter-label">División:</label>
-                    <select id="divisionFilter" class="division-select">
-                        <option value="">Todas las divisiones</option>
-                    </select>
-
-                    <label for="sortSelect" class="filter-label">Ordenar:</label>
-                    <select id="sortSelect" class="division-select">
-                        <option value="title">Nombre</option>
-                        <option value="division">División</option>
-                    </select>
-
-                    <span id="resultCount" class="result-count" aria-live="polite"></span>
+        <!-- Agents view -->
+        <div id="agentsView">
+            <section class="stats-section">
+                <div class="section-inner">
+                    <div class="stats-grid" id="statsContainer"></div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Agents Section -->
-        <section class="agents-section">
+            <section class="filter-section">
+                <div class="section-inner">
+                    <div class="filter-bar">
+                        <label for="divisionFilter" class="filter-label">División:</label>
+                        <select id="divisionFilter" class="division-select">
+                            <option value="">Todas las divisiones</option>
+                        </select>
+
+                        <label for="sortSelect" class="filter-label">Ordenar:</label>
+                        <select id="sortSelect" class="division-select">
+                            <option value="title">Nombre</option>
+                            <option value="division">División</option>
+                        </select>
+
+                        <span id="resultCount" class="result-count" aria-live="polite"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="agents-section">
+                <div class="section-inner">
+                    <div class="agents-grid" id="agentsGrid">
+                        <div class="loading">Cargando agentes...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Tasks view -->
+        <section id="tasksView" class="agents-section" hidden>
             <div class="section-inner">
-                <div class="agents-grid" id="agentsGrid">
-                    <div class="loading">Cargando agentes...</div>
+                <div class="tasks-toolbar">
+                    <p class="tasks-intro">Tareas programadas de tu cuenta de Claude. Se leen en vivo al abrir esta pestaña.</p>
+                    <button class="btn btn-secondary btn-small" id="refreshTasksBtn" type="button">Actualizar</button>
+                </div>
+                <div class="tasks-list" id="tasksList">
+                    <div class="loading">Cargando tareas...</div>
                 </div>
             </div>
         </section>
@@ -84,7 +119,7 @@
         </footer>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (detail, editor and confirmation share it) -->
     <div id="modal" class="modal" role="dialog" aria-modal="true">
         <div class="modal-overlay"></div>
         <div class="modal-content">

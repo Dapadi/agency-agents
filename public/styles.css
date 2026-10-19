@@ -693,3 +693,231 @@ p {
 .toast.show {
     transform: translateX(-50%) translateY(0);
 }
+
+/* ========== CONTROL PANEL: ACCESS, TABS, EDITOR, TASKS ========== */
+
+[hidden] {
+    display: none !important;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.btn-small {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--size-sm);
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: var(--ground);
+    border: 1px solid #dc2626;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.agent-footer {
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+}
+
+.form-error {
+    color: #b91c1c;
+    font-size: var(--size-sm);
+    min-height: 1.25em;
+    margin-top: var(--space-xs);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+}
+
+.agent-editor {
+    width: 100%;
+    min-height: 50vh;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--size-sm);
+    line-height: var(--leading-normal);
+    padding: var(--space-sm);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background: var(--ground-alt);
+    color: var(--ink);
+    resize: vertical;
+}
+
+.agent-editor:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+/* Login */
+
+.login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+    background: var(--ground-alt);
+}
+
+.login-card {
+    background: var(--ground);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.12);
+}
+
+.login-card h1 {
+    font-size: var(--size-xl);
+}
+
+.login-hint {
+    color: var(--ink-secondary);
+    font-size: var(--size-sm);
+}
+
+.login-input {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    font-size: var(--size-base);
+}
+
+.login-input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.login-submit {
+    align-self: stretch;
+}
+
+/* Tabs */
+
+.tabs {
+    border-bottom: 1px solid var(--border-light);
+    background: var(--ground);
+}
+
+.tabs-inner {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.tab {
+    background: none;
+    border: none;
+    padding: var(--space-sm) 0;
+    font-size: var(--size-base);
+    color: var(--ink-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tab.is-active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+    font-weight: 600;
+}
+
+/* Scheduled tasks */
+
+.tasks-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+}
+
+.tasks-intro {
+    color: var(--ink-secondary);
+    font-size: var(--size-sm);
+}
+
+.tasks-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-md);
+}
+
+.task-card {
+    background: var(--ground);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.task-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.task-status {
+    font-size: var(--size-sm);
+    padding: 2px var(--space-xs);
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.task-status.is-on {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.task-status.is-off {
+    background: #f1f5f9;
+    color: var(--ink-secondary);
+}
+
+.task-meta {
+    display: grid;
+    gap: var(--space-xs);
+    font-size: var(--size-sm);
+}
+
+.task-meta div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.task-meta dt {
+    color: var(--ink-secondary);
+}
+
+.task-meta dd {
+    text-align: right;
+}
