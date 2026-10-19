@@ -13,8 +13,8 @@
             <div class="nav-inner">
                 <div class="logo">Agency</div>
                 <div class="nav-stats">
-                    <span class="stat-badge"><span id="totalAgents">282</span> agentes</span>
-                    <span class="stat-badge"><span id="totalDivisions">63</span> divisiones</span>
+                    <span class="stat-badge"><span id="totalAgents">—</span> agentes</span>
+                    <span class="stat-badge"><span id="totalDivisions">—</span> divisiones</span>
                 </div>
             </div>
         </nav>
@@ -23,18 +23,17 @@
         <section class="hero">
             <div class="hero-inner">
                 <h1>Tu equipo especializado de IA</h1>
-                <p class="hero-subtitle">282 agentes profesionales, 63 especialidades, una dashboard para controlarlos todos</p>
+                <p class="hero-subtitle">Agentes profesionales por especialidad, con una sola interfaz para buscarlos, revisarlos y copiarlos</p>
 
-                <!-- Live Search Thing -->
                 <div class="search-hero">
                     <input
                         type="text"
                         id="searchInput"
-                        placeholder="Busca por nombre, especialidad..."
+                        placeholder="Busca por nombre, especialidad... (atajo: /)"
                         class="search-input-hero"
                         aria-label="Buscar agentes"
                     >
-                    <button class="search-btn" aria-label="Buscar">
+                    <button class="search-btn" aria-label="Enfocar búsqueda">
                         <span>→</span>
                     </button>
                 </div>
@@ -44,20 +43,7 @@
         <!-- Stats Section -->
         <section class="stats-section">
             <div class="section-inner">
-                <div class="stats-grid" id="statsContainer">
-                    <div class="stat-card">
-                        <div class="stat-number">282</div>
-                        <div class="stat-label">Agentes instalados</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">63</div>
-                        <div class="stat-label">Divisiones especializadas</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">100%</div>
-                        <div class="stat-label">Listo para usar</div>
-                    </div>
-                </div>
+                <div class="stats-grid" id="statsContainer"></div>
             </div>
         </section>
 
@@ -65,10 +51,18 @@
         <section class="filter-section">
             <div class="section-inner">
                 <div class="filter-bar">
-                    <label for="divisionFilter" class="filter-label">Filtrar por división:</label>
+                    <label for="divisionFilter" class="filter-label">División:</label>
                     <select id="divisionFilter" class="division-select">
                         <option value="">Todas las divisiones</option>
                     </select>
+
+                    <label for="sortSelect" class="filter-label">Ordenar:</label>
+                    <select id="sortSelect" class="division-select">
+                        <option value="title">Nombre</option>
+                        <option value="division">División</option>
+                    </select>
+
+                    <span id="resultCount" class="result-count" aria-live="polite"></span>
                 </div>
             </div>
         </section>
@@ -98,6 +92,9 @@
             <div id="modalBody"></div>
         </div>
     </div>
+
+    <!-- Feedback -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script src="app.js"></script>
 </body>

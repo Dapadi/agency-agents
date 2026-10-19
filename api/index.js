@@ -33,7 +33,10 @@ async function loadAgents() {
           agents.push({
             id: file.replace('.md', ''),
             filename: file,
-            title: data.title || file.replace('.md', ''),
+            title: data.name || data.title || file.replace('.md', ''),
+            emoji: data.emoji || '',
+            color: data.color || '',
+            vibe: data.vibe || '',
             category: data.category || 'Uncategorized',
             division: extractDivision(file),
             description: data.description || '',

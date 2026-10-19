@@ -1,207 +1,267 @@
 // State
-let allAgents = [];
-let filteredAgents = [];
+const state = {
+  agents: [],
+  query: '',
+  division: '',
+  sort: 'title'
+};
 
-// Ensure DOM is ready before attaching listeners
-function initializeEventListeners() {
-  if (searchInput) searchInput.addEventListener('input', filterAgents);
-  if (divisionFilter) divisionFilter.addEventListener('change', filterAgents);
-  if (closeBtn) closeBtn.addEventListener('click', closeModal);
-  window.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
+// DOM Elements
+const els = {
+  grid: document.getElementById('agentsGrid'),
+  search: document.getElementById('searchInput'),
+  division: document.getElementById('divisionFilter'),
+  sort: document.getElementById('sortSelect'),
+  count: document.getElementById('resultCount'),
+  stats: document.getElementById('statsContainer'),
+  totalAgents: document.getElementById('totalAgents'),
+  totalDivisions: document.getElementById('totalDivisions'),
+  modal: document.getElementById('modal'),
+  modalBody: document.getElementById('modalBody'),
+  toast: document.getElementById('toast')
+};
+
+let toastTimer = null;
+
+// Init
+async function init() {
+  bindEvents();
+
+  try {
+    const [agents, stats] = await Promise.all([
+      fetchJson('/api/agents'),
+      fetchJson('/api/stats')
+    ]);
+
+    state.agents = agents;
+    populateDivisions(stats.divisions);
+    renderStats(stats);
+    render();
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+    els.grid.innerHTML = '<div class="no-results">Error al cargar los agentes</div>';
+  }
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url} respondió ${response.status}`);
+  return response.json();
+}
+
+// Events (delegated, so re-rendering the grid needs no rebinding)
+function bindEvents() {
+  els.search.addEventListener('input', (e) => {
+    state.query = e.target.value.trim().toLowerCase();
+    render();
+  });
+
+  els.division.addEventListener('change', (e) => {
+    state.division = e.target.value;
+    render();
+  });
+
+  els.sort.addEventListener('change', (e) => {
+    state.sort = e.target.value;
+    render();
+  });
+
+  document.querySelector('.search-btn').addEventListener('click', () => els.search.focus());
+
+  els.grid.addEventListener('click', onGridClick);
+  els.grid.addEventListener('keydown', (e) => {
+    const card = e.target.closest('.agent-card');
+    if (card && e.key === 'Enter' && e.target === card) openAgent(card.dataset.id);
+  });
+
+  els.modal.addEventListener('click', (e) => {
+    if (e.target.matches('.modal-overlay, .modal-close')) closeModal();
+    const copyBtn = e.target.closest('[data-copy-id]');
+    if (copyBtn) {
+      const agent = findAgent(copyBtn.dataset.copyId);
+      if (agent) copyToClipboard(agent.fullContent, `"${agent.title}" copiado`);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && els.modal.classList.contains('active')) closeModal();
+    if (e.key === '/' && document.activeElement !== els.search && !els.modal.classList.contains('active')) {
+      e.preventDefault();
+      els.search.focus();
+    }
   });
 }
 
-// DOM Elements
-const agentsGrid = document.getElementById('agentsGrid');
-const searchInput = document.getElementById('searchInput');
-const divisionFilter = document.getElementById('divisionFilter');
-const statsContainer = document.getElementById('statsContainer');
-const modal = document.getElementById('modal');
-const modalBody = document.getElementById('modalBody');
-const closeBtn = document.querySelector('.modal-close');
+function onGridClick(e) {
+  const card = e.target.closest('.agent-card');
+  if (!card) return;
 
-// Event Listeners - initialized after DOM is ready
-window.addEventListener('DOMContentLoaded', initializeEventListeners);
+  const agent = findAgent(card.dataset.id);
+  if (!agent) return;
 
-// Initialize
-async function init() {
-    await loadAgents();
-    await loadStats();
-    displayAgents(allAgents);
+  if (e.target.closest('[data-action="copy"]')) {
+    copyToClipboard(agent.fullContent, `"${agent.title}" copiado`);
+    return;
+  }
+
+  openModal(agent);
 }
 
-// Load agents from API
-async function loadAgents() {
-    try {
-        const response = await fetch('/api/agents');
-        allAgents = await response.json();
-        populateDivisionFilter();
-    } catch (error) {
-        console.error('Error loading agents:', error);
-        agentsGrid.innerHTML = '<div class="no-results">Error al cargar los agentes</div>';
-    }
+function openAgent(id) {
+  const agent = findAgent(id);
+  if (agent) openModal(agent);
 }
 
-// Load statistics
-async function loadStats() {
-    try {
-        const response = await fetch('/api/stats');
-        const stats = await response.json();
-        displayStats(stats);
-    } catch (error) {
-        console.error('Error loading stats:', error);
-    }
+function findAgent(id) {
+  return state.agents.find(a => a.id === id);
 }
 
-// Display statistics
-function displayStats(stats) {
-    const divisions = stats.divisions;
-    const divisionCount = Object.keys(divisions).length;
+// Stats & filters
+function renderStats(stats) {
+  const divisionCount = Object.keys(stats.divisions).length;
+  const largest = Math.max(...Object.values(stats.divisions));
 
-    statsContainer.innerHTML = `
-        <div class="stat-card">
-            <div class="number">${stats.totalAgents}</div>
-            <div class="label">Agentes Totales</div>
-        </div>
-        <div class="stat-card">
-            <div class="number">${divisionCount}</div>
-            <div class="label">Divisiones</div>
-        </div>
-        <div class="stat-card">
-            <div class="number">${Math.max(...Object.values(divisions))}</div>
-            <div class="label">Máximos por División</div>
-        </div>
-    `;
+  els.totalAgents.textContent = stats.totalAgents;
+  els.totalDivisions.textContent = divisionCount;
+
+  els.stats.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-number">${stats.totalAgents}</div>
+      <div class="stat-label">Agentes instalados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${divisionCount}</div>
+      <div class="stat-label">Divisiones</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">${largest}</div>
+      <div class="stat-label">Máximo por división</div>
+    </div>
+  `;
 }
 
-// Populate division filter
-function populateDivisionFilter() {
-    const divisions = [...new Set(allAgents.map(a => a.division))].sort();
-
-    divisions.forEach(division => {
-        const option = document.createElement('option');
-        option.value = division;
-        option.textContent = division.charAt(0).toUpperCase() + division.slice(1);
-        divisionFilter.appendChild(option);
+function populateDivisions(divisions) {
+  Object.keys(divisions)
+    .sort()
+    .forEach(division => {
+      const option = document.createElement('option');
+      option.value = division;
+      option.textContent = `${capitalize(division)} (${divisions[division]})`;
+      els.division.appendChild(option);
     });
 }
 
-// Filter agents
-function filterAgents() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const selectedDivision = divisionFilter.value;
+function filteredAgents() {
+  const list = state.agents.filter(agent => {
+    if (state.division && agent.division !== state.division) return false;
+    if (!state.query) return true;
 
-    filteredAgents = allAgents.filter(agent => {
-        const matchesSearch = agent.title.toLowerCase().includes(searchTerm) ||
-                            agent.division.toLowerCase().includes(searchTerm) ||
-                            agent.id.toLowerCase().includes(searchTerm);
-        const matchesDivision = !selectedDivision || agent.division === selectedDivision;
+    return [agent.title, agent.id, agent.division, agent.description, agent.vibe]
+      .some(value => (value || '').toLowerCase().includes(state.query));
+  });
 
-        return matchesSearch && matchesDivision;
-    });
-
-    displayAgents(filteredAgents);
+  if (state.sort === 'division') {
+    return list.sort((a, b) => a.division.localeCompare(b.division) || a.title.localeCompare(b.title, 'es'));
+  }
+  return list.sort((a, b) => a.title.localeCompare(b.title, 'es'));
 }
 
-// Display agents
-function displayAgents(agents) {
-    if (agents.length === 0) {
-        agentsGrid.innerHTML = '<div class="no-results">No se encontraron agentes. Intenta con otro filtro.</div>';
-        return;
-    }
+// Render
+function render() {
+  const list = filteredAgents();
 
-    agentsGrid.innerHTML = agents.map(agent => `
-        <div class="agent-card" onclick="showModal('${agent.id}')">
-            <div class="agent-header">
-                <h3 class="agent-title">${escapeHtml(agent.title)}</h3>
-                <span class="agent-badge">${agent.division}</span>
-            </div>
-            <div class="agent-division">📁 ${agent.division.toUpperCase()}</div>
-            <p class="agent-description">${escapeHtml(agent.content)}</p>
-            <div class="agent-footer">
-                <button class="btn btn-primary">Ver Detalles</button>
-                <button class="btn btn-secondary" onclick="copyAgent(event, '${agent.id}')">Copiar</button>
-            </div>
-        </div>
-    `).join('');
+  els.count.textContent = `${list.length} de ${state.agents.length} agentes`;
+
+  if (list.length === 0) {
+    els.grid.innerHTML = '<div class="no-results">No se encontraron agentes. Intenta con otro filtro.</div>';
+    return;
+  }
+
+  els.grid.innerHTML = list.map(cardTemplate).join('');
 }
 
-// Show modal
-function showModal(agentId) {
-    const agent = allAgents.find(a => a.id === agentId);
-
-    if (!agent) return;
-
-    const frontmatterHtml = Object.entries(agent.frontmatter)
-        .map(([key, value]) => `<div class="meta-item"><strong>${key}:</strong> ${escapeHtml(String(value))}</div>`)
-        .join('');
-
-    modalBody.innerHTML = `
-        <h2>${escapeHtml(agent.title)}</h2>
-        <div class="modal-meta">
-            <div class="meta-item"><strong>ID:</strong> ${escapeHtml(agent.id)}</div>
-            <div class="meta-item"><strong>División:</strong> ${escapeHtml(agent.division)}</div>
-            <div class="meta-item"><strong>Archivo:</strong> ${escapeHtml(agent.filename)}</div>
-        </div>
-        ${frontmatterHtml ? '<h3 style="margin-top: 20px; color: var(--primary);">Metadatos</h3><div class="modal-meta">' + frontmatterHtml + '</div>' : ''}
-        <h3 style="margin-top: 20px; color: var(--primary);">Contenido</h3>
-        <pre><code>${escapeHtml(agent.fullContent.substring(0, 2000))}</code></pre>
-        <button class="copy-btn" onclick="copyFullAgent('${agent.id}')">
-            📋 Copiar Agente Completo
-        </button>
-    `;
-
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+function cardTemplate(agent) {
+  return `
+    <article class="agent-card" data-id="${escapeHtml(agent.id)}" tabindex="0">
+      <div class="agent-header">
+        <span class="agent-emoji" aria-hidden="true">${escapeHtml(agent.emoji || '🤖')}</span>
+        <h3 class="agent-title">${escapeHtml(agent.title)}</h3>
+      </div>
+      <div class="agent-division">📁 ${escapeHtml(agent.division.toUpperCase())}</div>
+      <p class="agent-description">${escapeHtml(agent.vibe || agent.description)}</p>
+      <div class="agent-footer">
+        <button class="btn btn-primary" data-action="view">Ver detalles</button>
+        <button class="btn btn-secondary" data-action="copy">Copiar</button>
+      </div>
+    </article>
+  `;
 }
 
-// Close modal
+// Modal
+function openModal(agent) {
+  const meta = [
+    ['ID', agent.id],
+    ['División', agent.division],
+    ['Archivo', agent.filename],
+    ['Color', agent.color]
+  ].filter(([, value]) => value);
+
+  els.modalBody.innerHTML = `
+    <div class="modal-title-row">
+      <span class="agent-emoji" aria-hidden="true">${escapeHtml(agent.emoji || '🤖')}</span>
+      <h2>${escapeHtml(agent.title)}</h2>
+    </div>
+    ${agent.vibe ? `<p class="modal-vibe">${escapeHtml(agent.vibe)}</p>` : ''}
+    ${agent.description ? `<p class="modal-desc">${escapeHtml(agent.description)}</p>` : ''}
+    <div class="modal-meta">
+      ${meta.map(([key, value]) => `<div class="meta-item"><strong>${key}:</strong> ${escapeHtml(value)}</div>`).join('')}
+    </div>
+    <h3 class="modal-section">Contenido</h3>
+    <pre class="agent-source"><code>${escapeHtml(agent.fullContent)}</code></pre>
+    <button class="copy-btn" data-copy-id="${escapeHtml(agent.id)}">📋 Copiar agente completo</button>
+  `;
+
+  els.modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  els.modal.querySelector('.modal-close').focus();
+}
+
 function closeModal() {
-    modal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-    modalBody.innerHTML = '';
+  els.modal.classList.remove('active');
+  document.body.style.overflow = '';
+  els.modalBody.innerHTML = '';
 }
 
-// Copy agent
-function copyAgent(event, agentId) {
-    event.stopPropagation();
-    const agent = allAgents.find(a => a.id === agentId);
-
-    if (!agent) return;
-
-    const text = `${agent.title}\nDivisión: ${agent.division}\nArchivo: ${agent.filename}`;
-    copyToClipboard(text);
+// Clipboard & feedback
+async function copyToClipboard(text, message) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(`✅ ${message}`);
+  } catch {
+    showToast('❌ No se pudo copiar');
+  }
 }
 
-// Copy full agent
-function copyFullAgent(agentId) {
-    const agent = allAgents.find(a => a.id === agentId);
-
-    if (!agent) return;
-
-    copyToClipboard(agent.fullContent);
+function showToast(message) {
+  els.toast.textContent = message;
+  els.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => els.toast.classList.remove('show'), 2000);
 }
 
-// Copy to clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        alert('✅ Copiado al portapapeles');
-    }).catch(() => {
-        alert('❌ Error al copiar');
-    });
+// Helpers
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[c]);
 }
 
-// Escape HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function capitalize(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-// Start app when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+init();
