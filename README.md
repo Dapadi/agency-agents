@@ -157,3 +157,22 @@ MIT
 ---
 
 Hecho con ❤️ para controlar todos tus agentes de IA.
+
+## 🔐 Panel de control: configuración
+
+La web permite buscar, ver, editar y eliminar agentes, y consultar las tareas programadas. Para desplegarla en Vercel hay que definir estas variables de entorno:
+
+| Variable | Obligatoria | Para qué |
+|----------|-------------|----------|
+| `DASHBOARD_PASSWORD` | Sí | Contraseña para entrar. Sin ella, en producción el panel responde 503 y no es accesible. |
+| `GITHUB_TOKEN` | Sí, para guardar | Token de GitHub con permiso `Contents: read & write` sobre el repo. Cada edición o borrado crea un commit. Sin él, la web no puede escribir en producción. |
+| `GITHUB_REPO` | No | Repositorio donde se guardan los cambios. Por defecto `Dapadi/agency-agents`. |
+| `GITHUB_BRANCH` | No | Rama donde se hacen los commits. Por defecto `main`. |
+| `CLAUDE_TRIGGERS_URL` | Para ver tareas | URL del endpoint que lista las tareas programadas. |
+| `CLAUDE_API_TOKEN` | Para ver tareas | Token que se envía como `Authorization: Bearer` al consultar esa URL. |
+
+Notas:
+
+- Los cambios se ven en la web después del redespliegue de Vercel, porque los agentes se leen de la copia desplegada del repo.
+- En desarrollo (`npm run dev`) no hace falta configurar nada: la web lee y escribe en `~/.claude/agents`, sin contraseña ni GitHub.
+- Hay un límite de 10 intentos de login cada 15 minutos por IP.
