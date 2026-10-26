@@ -25,8 +25,8 @@ function loadStore() {
     if (raw && Array.isArray(raw.offices)) store = raw;
   } catch (e) { /* almacenamiento no disponible o corrupto */ }
   if (!store.offices.length) {
-    const seed = shuffle(allAgents.filter(a => a.emoji)).slice(0, 8).map(a => ({ id: a.id, note: '' }));
-    store = { offices: [{ id: uid(), name: 'Oficina principal', emoji: '🏢', agents: seed }], active: null };
+    store = { offices: suggestedPlan().filter(f => f.ids.length).map(f => ({ id: uid(), name: f.name, emoji: f.emoji, agents: f.ids.map(id => ({ id, note: '' })) })), active: null };
+    if (!store.offices.length) store.offices = [{ id: uid(), name: 'Mi oficina', emoji: '🏢', agents: [] }];
     store.active = store.offices[0].id;
     save();
   }
@@ -187,7 +187,7 @@ function renderAgents() {
   const q = $('#searchInput').value.trim().toLowerCase();
   const div = $('#divisionFilter').value;
   const list = allAgents.filter(a => (!div || a.division === div) &&
-    (!q || [a.title, a.id, a.division, a.description, a.vibe].some(x => (x || '').toLowerCase().includes(q))));
+    (!q || [a.title, a.originalTitle, a.id, a.division, a.description, a.vibe].some(x => (x || '').toLowerCase().includes(q))));
   $('#resultCount').textContent = `${list.length} resultados · oficina: ${activeOffice().name}`;
   $('#agentsGrid').innerHTML = list.length ? list.map(cardHtml).join('') : '<div class="no-results">No se encontraron agentes.</div>';
 }
@@ -244,7 +244,7 @@ function openPicker() {
     <div class="form-actions"><button class="btn primary" id="pkDone">Listo</button></div>`);
   const draw = () => {
     const q = $('#pkQ').value.trim().toLowerCase(), d = $('#pkDiv').value;
-    const res = allAgents.filter(a => (!d || a.division === d) && (!q || [a.title, a.id, a.description].some(x => (x || '').toLowerCase().includes(q))));
+    const res = allAgents.filter(a => (!d || a.division === d) && (!q || [a.title, a.originalTitle, a.id, a.description].some(x => (x || '').toLowerCase().includes(q))));
     $('#pkInfo').textContent = `${res.length} agentes${res.length > 80 ? ' (mostrando 80, afina la búsqueda)' : ''} · ${o.agents.length} en la oficina`;
     $('#pkList').innerHTML = res.slice(0, 80).map(a => `<label class="pk-row"><input type="checkbox" data-pk="${esc(a.id)}" ${inOffice(o, a.id) ? 'checked' : ''}><span class="chip">${esc(a.emoji || '🤖')}</span><span class="pk-t"><strong>${esc(a.title)}</strong><small>${esc(a.division)}</small></span></label>`).join('');
   };
@@ -258,7 +258,7 @@ function showAgent(id) {
   const a = byId(id); if (!a) return;
   const o = activeOffice(); const m = o.agents.find(x => x.id === id);
   dialog(`<h2>${esc((a.emoji ? a.emoji + ' ' : '') + a.title)}</h2>
-    <div class="meta-line"><span>📁 ${esc(a.division)}</span><span>📄 ${esc(a.filename)}</span>${a.color ? `<span>🎨 ${esc(a.color)}</span>` : ''}</div>
+    <div class="meta-line"><span>📁 ${esc(a.division)}</span><span>📄 ${esc(a.filename)}</span>${a.originalTitle && a.originalTitle !== a.title ? `<span>🇬🇧 ${esc(a.originalTitle)}</span>` : ''}${a.color ? `<span>🎨 ${esc(a.color)}</span>` : ''}</div>
     ${a.vibe ? `<p class="muted"><em>${esc(a.vibe)}</em></p>` : ''}<p>${esc(a.description)}</p>
     <div class="field"><strong>Oficinas</strong><div class="chips">${store.offices.map(x => `<button class="btn ${inOffice(x, id) ? 'on' : ''}" data-mv="${esc(x.id)}">${esc(x.emoji)} ${esc(x.name)} ${inOffice(x, id) ? '✓' : ''}</button>`).join('')}</div></div>
     ${m ? `<label class="field">Texto del globo en "${esc(o.name)}"<input id="noteIn" value="${esc(m.note)}" placeholder="${esc(a.vibe || 'Texto personalizado')}" maxlength="80"></label>` : ''}
