@@ -8,9 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // Use local agents directory in the repository
-const agentsDir = process.env.NODE_ENV === 'production'
-  ? path.join(__dirname, '../agents')
-  : path.join(process.env.HOME || process.env.USERPROFILE || '', '.claude', 'agents');
+const repoAgentsDir = path.join(__dirname, '../agents');
+const userAgentsDir = path.join(process.env.HOME || process.env.USERPROFILE || '', '.claude', 'agents');
+const agentsDir = process.env.AGENTS_DIR
+  || (fs.existsSync(repoAgentsDir) ? repoAgentsDir : userAgentsDir);
 
 // Middleware
 app.use(express.json());
@@ -33,12 +34,15 @@ async function loadAgents() {
           agents.push({
             id: file.replace('.md', ''),
             filename: file,
-            title: data.title || file.replace('.md', ''),
-            category: data.category || 'Uncategorized',
+            title: data.name || data.title || file.replace('.md', ''),
+            category: data.category || extractDivision(file),
+            emoji: data.emoji || '',
+            color: data.color || '',
+            vibe: data.vibe || '',
             division: extractDivision(file),
             description: data.description || '',
             frontmatter: data,
-            content: markdown.substring(0, 500) + '...',
+            content: data.description || markdown.substring(0, 300) + '...',
             fullContent: markdown
           });
         } catch (err) {

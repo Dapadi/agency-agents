@@ -47,8 +47,10 @@ http://localhost:3000
 ## 📁 Estructura del Proyecto
 
 ```
-dev/agentes/
-├── server.js           # Servidor Express + APIs
+agency-agents/
+├── agents/             # Agentes (.md con frontmatter)
+├── api/index.js        # App Express + APIs (también función de Vercel)
+├── server.js           # Arranque local
 ├── package.json        # Dependencias del proyecto
 ├── public/
 │   ├── index.html      # HTML principal
