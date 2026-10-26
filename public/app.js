@@ -1,7 +1,9 @@
 const $ = (s) => document.querySelector(s);
 const COLORS = { purple:'#8b5cf6', blue:'#3b82f6', green:'#10b981', orange:'#f59e0b', red:'#ef4444', pink:'#ec4899', cyan:'#06b6d4', yellow:'#eab308', indigo:'#6366f1', teal:'#14b8a6', gray:'#64748b' };
+const PEOPLE = ['🧑‍💻','👩‍💻','👨‍💼','👩‍🔬','🧑‍🎨','👨‍🔧','👩‍💼','🧑‍🚀'];
 
 let allAgents = [];
+let office = [];
 
 const esc = (t) => { const d = document.createElement('div'); d.textContent = t ?? ''; return d.innerHTML; };
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -18,45 +20,59 @@ async function load() {
     if (!Array.isArray(allAgents)) throw new Error('bad response');
   } catch (e) {
     console.error(e);
-    console.warn('sin agentes');
+    $('#sourceInfo').textContent = 'Error al cargar agentes';
     allAgents = [];
   }
   const divs = sortedDivisions();
   $('#navAgents').textContent = allAgents.length;
-    const sel = $('#divisionFilter');
+  $('#navDivisions').textContent = divs.length;
+  $('#sourceInfo').textContent = `${allAgents.length} agentes cargados`;
+  const sel = $('#divisionFilter');
   divs.map(d => d[0]).sort().forEach(d => sel.insertAdjacentHTML('beforeend', `<option value="${esc(d)}">${esc(cap(d))}</option>`));
+  pickOffice();
   renderHome();
   renderDivisions();
   route();
 }
 
-// Contenido de demostración: aún no hay backend para estas secciones.
-const DEMO_ACTIVITY = [
-  ['✅', 'Desarrollador Full Stack', 'Completado: análisis de código', 'hace 12 min'],
-  ['⚡', 'Automatización Backup', 'Ejecutada correctamente', 'hace 25 min'],
-  ['🤖', 'Analista de Negocio', 'Inicio nueva tarea de análisis', 'hace 28 min'],
-  ['📄', 'Revisar documentación', 'Asignada a Asistente Personal', 'hace 1 h'],
-  ['🎨', 'Diseñador UI/UX', 'Pausado por límite de tokens', 'hace 3 h'],
-  ['⛔', 'Error en test automatizados', 'Falló la ejecución en entorno de pruebas', 'hace 4 h'],
-];
-const DEMO_TASKS = [
-  ['Revisar documentación API', 'Alta', 'hace 12 min'], ['Corregir error en facturación', 'Alta', 'hace 25 min'],
-  ['Implementar UI móvil', 'Media', 'hace 1 h'], ['Pruebas de integración', 'Media', 'hace 2 h'],
-];
-const DEMO_PROJECTS = [
-  ['ControlHub', 'En progreso'], ['FichaFácil', 'En progreso'], ['TimeSchool', 'En pausa'], ['Academiq', 'Activo'], ['Web personal', 'En pausa'],
-];
+function pickOffice() { office = shuffle(allAgents.filter(a => a.emoji)).slice(0, 8); }
+
+const SHIRTS = ['#3b82f6','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#ef4444','#14b8a6'];
+const HAIR = ['#2b1d14','#111','#6b3f1d','#c58b3a','#4a1f4a','#1f2937'];
+// Posiciones (x%, y%) del escritorio dentro de la escena, escalonadas como en una oficina.
+const SPOTS = [[18,50],[18,73],[18,96],[50,61],[50,85],[82,50],[82,73],[82,96]];
+
+function renderOffice() {
+  const desks = office.map((a, i) => {
+    const [x, y] = SPOTS[i % SPOTS.length];
+    return `<div class="desk" data-id="${esc(a.id)}" style="left:${x}%;top:${y}%;--z:${Math.round(y)};--shirt:${SHIRTS[i % SHIRTS.length]};--hair:${HAIR[i % HAIR.length]};--glow:${color(a)}">
+      <div class="bubble"><span class="badge" style="background:${color(a)}33">${esc(a.emoji)}</span>
+        <span class="txt"><strong>${esc(a.title)}</strong><small>${esc(a.vibe || a.description)}</small></span></div>
+      <div class="worker"><div class="head"></div><div class="body"></div></div>
+      <div class="desktop"><span class="laptop"></span><span class="mug"></span></div>
+    </div>`;
+  }).join('');
+  $('#office').innerHTML = `<div class="wall"><span class="window"></span>
+    <div class="sign"><span class="big">✺</span><div><h1>Agency ControlHub</h1><p>Tu oficina de agentes de IA · ${allAgents.length} agentes</p></div></div>
+    <span class="window"></span></div>
+    <span class="deco" style="left:2%;top:30%">🪴</span><span class="deco" style="right:2%;top:30%">🪴</span>
+    <span class="deco" style="left:2%;bottom:3%">🪴</span><span class="deco" style="right:2%;bottom:3%">🌿</span>${desks}`;
+}
 
 function renderHome() {
-  $('#activity').innerHTML = DEMO_ACTIVITY.map(([i, t, d, h]) =>
-    `<li><span class="chip">${i}</span><span><strong>${esc(t)}</strong><small>${esc(d)}</small></span><span class="n">${esc(h)}</span></li>`).join('');
+  const divs = sortedDivisions();
+  renderOffice();
+  $('#topDivisions').innerHTML = divs.slice(0, 6).map(([d, n]) =>
+    `<li data-div="${esc(d)}"><span class="chip">📁</span>${esc(cap(d))}<span class="n">${n} agentes</span></li>`).join('');
   $('#kpis').innerHTML = [
-    ['🤖', allAgents.length, 'Agentes activos'], ['⚡', 4, 'Automatizaciones'], ['⏱️', 3, 'Tareas en curso'], ['📁', 5, 'Proyectos'],
+    ['🤖', allAgents.length, 'Agentes'], ['🗂️', divs.length, 'Divisiones'],
+    ['🏆', divs[0] ? divs[0][1] : 0, divs[0] ? 'En ' + cap(divs[0][0]) : 'Mayor división'],
+    ['😀', allAgents.filter(a => a.emoji).length, 'Con perfil'],
   ].map(([i, v, l]) => `<div class="kpi"><div>${i}</div><div class="v">${v}</div><div class="l">${esc(l)}</div></div>`).join('');
-  $('#tasks').innerHTML = DEMO_TASKS.map(([t, p, h]) =>
-    `<li>${esc(t)}<span class="n"><span class="prio ${p.toLowerCase()}">${p}</span> ${esc(h)}</span></li>`).join('');
-  $('#projects').innerHTML = DEMO_PROJECTS.map(([t, st]) =>
-    `<li>📁 ${esc(t)}<span class="n"><span class="st ${st === 'Activo' ? 'ok' : ''}">${esc(st)}</span></span></li>`).join('');
+  $('#bigDivisions').innerHTML = divs.slice(0, 5).map(([d, n]) =>
+    `<li data-div="${esc(d)}"><span class="chip">📂</span>${esc(cap(d))}<span class="n tag">${n}</span></li>`).join('');
+  $('#featured').innerHTML = shuffle(allAgents).slice(0, 5).map(a =>
+    `<li data-id="${esc(a.id)}"><span class="chip">${esc(a.emoji || '🤖')}</span>${esc(a.title)}<span class="n">${esc(a.division)}</span></li>`).join('');
 }
 
 function cardHtml(a) {
@@ -102,11 +118,9 @@ function copy(text) {
 
 function route() {
   const view = (location.hash.slice(1) || 'home');
-  const known = ['home', 'agents', 'divisions'];
-  const v = known.includes(view) ? view : 'soon';
+  const v = ['home', 'agents', 'divisions'].includes(view) ? view : 'home';
   document.querySelectorAll('.view').forEach(el => el.hidden = el.id !== 'view-' + v);
-  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + view));
-  if (v === 'soon') $('#soonTitle').textContent = cap(view);
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.view === v));
   if (v === 'agents') renderAgents();
 }
 function go(view, div) {
@@ -124,7 +138,10 @@ document.addEventListener('click', (e) => {
 });
 $('#searchInput').addEventListener('input', () => { if (location.hash !== '#agents') go('agents'); else renderAgents(); });
 $('#divisionFilter').addEventListener('change', renderAgents);
-document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go(b.dataset.go));
+$('#qaAgents').onclick = () => go('agents', '');
+$('#qaDivisions').onclick = () => go('divisions');
+$('#qaShuffle').onclick = () => { pickOffice(); renderOffice(); };
+$('#qaRandom').onclick = () => allAgents.length && showAgent(allAgents[Math.floor(Math.random() * allAgents.length)].id);
 document.addEventListener('keydown', (e) => e.key === 'Escape' && closeModal());
 window.addEventListener('hashchange', route);
 
@@ -132,7 +149,7 @@ function tick() {
   const d = new Date();
   $('#clock').textContent = d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
   const h = d.getHours();
-  $('#greeting').textContent = (h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches') + ', David';
+  $('#greeting').textContent = h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches';
 }
 tick(); setInterval(tick, 30000);
 load();
