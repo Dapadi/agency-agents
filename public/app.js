@@ -99,13 +99,15 @@ function suggestBuilding() {
 }
 
 let newFloorId = null;
+const PAGE = 12;
+let shown = {};
 function renderBuilding() {
   const el = $('#building'); if (!el) return;
   const floors = store.offices.map((o, i) => {
-    const minis = o.agents.slice(0, 10).map((m, k) => {
+    const minis = o.agents.slice(0, 7).map((m, k) => {
       const a = byId(m.id);
       return a ? `<span class="mini" title="${esc(a.title)}" style="--shirt:${SHIRTS[k % SHIRTS.length]};--hair:${HAIR[k % HAIR.length]}"><i class="h"></i><i class="b"></i></span>` : '';
-    }).join('');
+    }).join('') + (o.agents.length > 7 ? `<span class="plus">+${o.agents.length - 7}</span>` : '');
     const n = o.agents.length;
     return `<div class="floor-row ${o.id === newFloorId ? 'new' : ''} ${o.id === store.active ? 'current' : ''}" data-open="${esc(o.id)}" style="--tint:${['#ffb25a','#c58cff','#5ad1c8','#ff8fb0','#8fb8ff'][i % 5]}">
       <div class="fside"><b>P${i + 1}</b><span class="fe">${esc(o.emoji)}</span><span class="fn">${esc(o.name)}</span></div>
@@ -123,7 +125,7 @@ function renderBuilding() {
     <div class="floor-row ground"><div class="fside"><b>PB</b><span class="fn">Entrada principal</span></div>
       <div class="glass"><div class="people"><span class="mini" style="--shirt:#64748b;--hair:#111"><i class="h"></i><i class="b"></i></span></div><div class="deskline reception"></div>
       <div class="flabel"><span class="fb">🛎️</span><span><strong>Recepción</strong><small>Todo en orden</small></span></div></div></div>
-    <div class="hq-sign">✺ Agency ControlHub<small>Headquarters</small></div>`;
+    <div class="street"><span>🌳</span><span class="lamp">💡</span><span>🚗</span><span>🌳</span><span class="lamp">💡</span><span>🚙</span><span>🌳</span></div>`;
   const total = store.offices.reduce((t, o) => t + o.agents.length, 0);
   $('#buildingInfo').textContent = `${store.offices.length} plantas · ${total} agentes`;
   $('#bKpis').innerHTML = [['🏢', store.offices.length, 'Plantas'], ['🤖', total, 'Agentes asignados'], ['🌐', allAgents.length, 'Disponibles'], ['📍', activeOffice().name, 'Oficina activa']]
@@ -144,7 +146,8 @@ function renderHead() {
 
 function renderOffice() {
   const o = activeOffice();
-  const desks = o.agents.map((m, i) => {
+  const limit = shown[o.id] || PAGE;
+  const desks = o.agents.slice(0, limit).map((m, i) => {
     const a = byId(m.id);
     if (!a) return '';
     return `<div class="desk" data-id="${esc(a.id)}" style="--shirt:${SHIRTS[i % SHIRTS.length]};--hair:${HAIR[i % HAIR.length]};--glow:${color(a)}">
@@ -155,12 +158,14 @@ function renderOffice() {
       <div class="desktop"><span class="laptop"></span><span class="mug"></span></div>
     </div>`;
   }).join('');
+  const rest = o.agents.length - limit;
+  const more = rest > 0 ? `<div class="more-wrap"><button class="btn primary" data-act="more">Ver ${Math.min(rest, PAGE)} más (${rest} restantes)</button></div>` : '';
   const empty = `<div class="empty"><p>Esta oficina está vacía.</p><button class="btn primary" data-act="add">➕ Añadir agentes</button></div>`;
   $('#office').innerHTML = `<div class="wall"><span class="window"></span>
     <div class="sign"><span class="big">${esc(o.emoji)}</span><div><h1>${esc(o.name)}</h1><p>Agency ControlHub · ${o.agents.length} agentes</p></div></div>
     <span class="window"></span></div>
     <span class="deco" style="left:2%;top:140px">🪴</span><span class="deco" style="right:2%;top:140px">🪴</span>
-    <div class="floor">${desks || empty}</div>`;
+    <div class="floor">${desks || empty}${more}</div>`;
 }
 
 function renderPanels() {
@@ -304,7 +309,8 @@ function go(view, div) {
 document.addEventListener('click', (e) => {
   const t = e.target;
   if (t.closest('.modal-close') || t === $('#modal')) return closeModal();
-  const act = t.closest('[data-act]'); if (act) { const o = activeOffice(); return act.dataset.act === 'add' ? openPicker() : act.dataset.act === 'edit' ? officeForm(o) : confirmDelete(o); }
+  const act = t.closest('[data-act]'); if (act && act.dataset.act === 'more') { const o = activeOffice(); shown[o.id] = (shown[o.id] || PAGE) + PAGE; return renderOffice(); }
+  if (act) { const o = activeOffice(); return act.dataset.act === 'add' ? openPicker() : act.dataset.act === 'edit' ? officeForm(o) : confirmDelete(o); }
   const fe = t.closest('[data-floor-edit]'); if (fe) { e.stopPropagation(); const o = store.offices.find(x => x.id === fe.dataset.floorEdit); return o && officeForm(o); }
   const fd = t.closest('[data-floor-del]'); if (fd) { e.stopPropagation(); const o = store.offices.find(x => x.id === fd.dataset.floorDel); return o && confirmDelete(o); }
   if (t.closest('#addFloor')) return officeForm();
