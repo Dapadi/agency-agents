@@ -58,7 +58,40 @@ function divisionCounts(ids) {
 }
 
 // ---------- render ----------
-function renderAll() { renderSidebar(); renderHead(); renderOffice(); renderPanels(); if (location.hash === '#agents') renderAgents(); }
+function renderAll() { renderSidebar(); renderBuilding(); renderHead(); renderOffice(); renderPanels(); if (location.hash === '#agents') renderAgents(); }
+
+let newFloorId = null;
+function renderBuilding() {
+  const el = $('#building'); if (!el) return;
+  const floors = store.offices.map((o, i) => {
+    const minis = o.agents.slice(0, 10).map((m, k) => {
+      const a = byId(m.id);
+      return a ? `<span class="mini" title="${esc(a.title)}" style="--shirt:${SHIRTS[k % SHIRTS.length]};--hair:${HAIR[k % HAIR.length]}"><i class="h"></i><i class="b"></i></span>` : '';
+    }).join('');
+    const n = o.agents.length;
+    return `<div class="floor-row ${o.id === newFloorId ? 'new' : ''} ${o.id === store.active ? 'current' : ''}" data-open="${esc(o.id)}" style="--tint:${['#ffb25a','#c58cff','#5ad1c8','#ff8fb0','#8fb8ff'][i % 5]}">
+      <div class="fside"><b>P${i + 1}</b><span class="fe">${esc(o.emoji)}</span><span class="fn">${esc(o.name)}</span></div>
+      <div class="glass">
+        <div class="fact"><button data-floor-edit="${esc(o.id)}" title="Editar">✏️</button><button data-floor-del="${esc(o.id)}" title="Eliminar planta">🗑️</button></div>
+        <div class="people">${minis || '<span class="muted">Planta vacía</span>'}</div>
+        <div class="deskline"></div>
+        <div class="flabel"><span class="fb">${esc(o.emoji)}</span><span><strong>${esc(o.name)}</strong><small>${n ? n + (n === 1 ? ' agente activo' : ' agentes activos') : 'Sin agentes'}</small></span></div>
+      </div>
+    </div>`;
+  }).reverse().join('');
+  el.innerHTML = `<div class="roof"><span class="roof-logo">✺</span><span>Agency ControlHub</span></div>
+    <button class="floor-row add" id="addFloor"><span>＋ Añadir planta</span></button>
+    ${floors}
+    <div class="floor-row ground"><div class="fside"><b>PB</b><span class="fn">Entrada principal</span></div>
+      <div class="glass"><div class="people"><span class="mini" style="--shirt:#64748b;--hair:#111"><i class="h"></i><i class="b"></i></span></div><div class="deskline reception"></div>
+      <div class="flabel"><span class="fb">🛎️</span><span><strong>Recepción</strong><small>Todo en orden</small></span></div></div></div>
+    <div class="hq-sign">✺ Agency ControlHub<small>Headquarters</small></div>`;
+  const total = store.offices.reduce((t, o) => t + o.agents.length, 0);
+  $('#buildingInfo').textContent = `${store.offices.length} plantas · ${total} agentes`;
+  $('#bKpis').innerHTML = [['🏢', store.offices.length, 'Plantas'], ['🤖', total, 'Agentes asignados'], ['🌐', allAgents.length, 'Disponibles'], ['📍', activeOffice().name, 'Oficina activa']]
+    .map(([i, v, l]) => `<div class="kpi"><div>${i}</div><div class="v" style="${String(v).length > 6 ? 'font-size:15px' : ''}">${esc(String(v))}</div><div class="l">${l}</div></div>`).join('');
+  newFloorId = null;
+}
 
 function renderSidebar() {
   $('#officeList').innerHTML = store.offices.map(o =>
@@ -150,7 +183,7 @@ function officeForm(office) {
   $('#offName').focus();
   const submit = () => {
     const name = $('#offName').value.trim(); if (!name) { $('#offName').focus(); return; }
-    if (isNew) { const o = { id: uid(), name, emoji, agents: [] }; store.offices.push(o); store.active = o.id; save(); closeModal(); renderAll(); go('home'); setTimeout(openPicker, 50); }
+    if (isNew) { const o = { id: uid(), name, emoji, agents: [] }; store.offices.push(o); store.active = o.id; newFloorId = o.id; save(); closeModal(); renderAll(); go('building'); }
     else { office.name = name; office.emoji = emoji; save(); closeModal(); renderAll(); }
   };
   $('#offSave').onclick = submit;
@@ -219,8 +252,8 @@ function importStore(file) {
 
 // ---------- rutas y eventos ----------
 function route() {
-  const view = location.hash.slice(1) || 'home';
-  const v = ['home', 'agents', 'divisions'].includes(view) ? view : 'home';
+  const view = location.hash.slice(1) || 'building';
+  const v = ['building', 'home', 'agents', 'divisions'].includes(view) ? view : 'building';
   document.querySelectorAll('.view').forEach(el => el.hidden = el.id !== 'view-' + v);
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.view === v));
   if (v === 'agents') renderAgents();
@@ -234,6 +267,9 @@ document.addEventListener('click', (e) => {
   const t = e.target;
   if (t.closest('.modal-close') || t === $('#modal')) return closeModal();
   const act = t.closest('[data-act]'); if (act) { const o = activeOffice(); return act.dataset.act === 'add' ? openPicker() : act.dataset.act === 'edit' ? officeForm(o) : confirmDelete(o); }
+  const fe = t.closest('[data-floor-edit]'); if (fe) { e.stopPropagation(); const o = store.offices.find(x => x.id === fe.dataset.floorEdit); return o && officeForm(o); }
+  const fd = t.closest('[data-floor-del]'); if (fd) { e.stopPropagation(); const o = store.offices.find(x => x.id === fd.dataset.floorDel); return o && confirmDelete(o); }
+  if (t.closest('#addFloor')) return officeForm();
   const rm = t.closest('[data-remove]'); if (rm) { e.stopPropagation(); return toggleAgent(rm.dataset.remove); }
   const tg = t.closest('[data-toggle]'); if (tg) { e.stopPropagation(); return toggleAgent(tg.dataset.toggle); }
   const op = t.closest('[data-open]'); if (op) { e.preventDefault(); return openOffice(op.dataset.open); }
@@ -245,6 +281,8 @@ document.addEventListener('click', (e) => {
 $('#newOfficeBtn').onclick = () => officeForm();
 $('#newOfficeLink').onclick = (e) => { e.preventDefault(); officeForm(); };
 $('#qaAdd').onclick = openPicker;
+$('#bNew').onclick = () => officeForm();
+$('#bAgents').onclick = () => go('agents', '');
 $('#qaEdit').onclick = () => officeForm(activeOffice());
 $('#qaExport').onclick = exportStore;
 $('#qaImport').onclick = () => $('#importFile').click();

@@ -11,6 +11,7 @@
     <aside class="sidebar">
       <div class="brand"><span class="brand-logo">✺</span><span>Agency ControlHub</span></div>
       <nav class="nav" id="nav">
+        <a href="#building" data-view="building"><span class="ico">🏙️</span>Edificio</a>
         <a href="#home" data-view="home"><span class="ico">🏢</span>Mi oficina</a>
         <a href="#agents" data-view="agents"><span class="ico">🤖</span>Agentes<b id="navAgents">0</b></a>
         <a href="#divisions" data-view="divisions"><span class="ico">🗂️</span>Divisiones<b id="navDivisions">0</b></a>
@@ -27,6 +28,21 @@
     </header>
 
     <main class="main">
+      <section id="view-building" class="view" hidden>
+        <div class="toolbar"><h2>🏙️ Edificio</h2><span class="muted" id="buildingInfo"></span></div>
+        <div class="building-grid">
+          <div class="building-wrap"><div class="building" id="building"></div></div>
+          <div class="right-col">
+            <div class="panel"><h3>📊 Resumen</h3><div class="kpis" id="bKpis"></div></div>
+            <div class="panel">
+              <h3>⚡ Acciones</h3>
+              <button class="qa blue" id="bNew">➕ Nueva planta (oficina)</button>
+              <button class="qa gray" id="bAgents">🤖 Ver todos los agentes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="view-home" class="view">
         <div class="office-head" id="officeHead"></div>
         <div class="home-grid">
