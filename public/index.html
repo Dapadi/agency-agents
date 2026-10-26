@@ -11,46 +11,45 @@
     <aside class="sidebar">
       <div class="brand"><span class="brand-logo">✺</span><span>Agency ControlHub</span></div>
       <nav class="nav" id="nav">
-        <a href="#home" data-view="home"><span class="ico">🏠</span>Inicio</a>
+        <a href="#home" data-view="home"><span class="ico">🏢</span>Mi oficina</a>
         <a href="#agents" data-view="agents"><span class="ico">🤖</span>Agentes<b id="navAgents">0</b></a>
         <a href="#divisions" data-view="divisions"><span class="ico">🗂️</span>Divisiones<b id="navDivisions">0</b></a>
       </nav>
-      <div class="side-card">
-        <div class="muted">Hoy</div>
-        <div class="clock" id="clock">--:--</div>
-        <div id="greeting">Bienvenido</div>
-      </div>
-      <div class="side-card ok"><span class="dot"></span><div>Todos los sistemas operativos<br><small id="sourceInfo" class="muted">Cargando…</small></div></div>
+      <div class="side-title">Oficinas <button class="icon-btn" id="newOfficeBtn" title="Nueva oficina">＋</button></div>
+      <div class="office-list" id="officeList"></div>
+      <div class="side-card"><div class="muted">Hoy</div><div class="clock" id="clock">--:--</div><div id="greeting">Bienvenido</div></div>
     </aside>
 
     <header class="topbar">
-      <div class="tagline">Tu oficina de agentes de IA</div>
+      <div class="tagline">Tus oficinas de agentes de IA</div>
       <label class="search"><span>🔍</span><input id="searchInput" type="search" placeholder="Buscar agentes, divisiones…" autocomplete="off"></label>
-      <div class="status"><span class="dot"></span>Sistema activo</div>
+      <div class="status"><span class="dot"></span>Guardado en este navegador</div>
     </header>
 
     <main class="main">
       <section id="view-home" class="view">
+        <div class="office-head" id="officeHead"></div>
         <div class="home-grid">
-          <div class="office" id="office" aria-label="Oficina de agentes"></div>
+          <div class="office" id="office"></div>
           <div class="right-col">
             <div class="panel">
-              <h3>⚙️ Divisiones principales <a href="#divisions">Ver todas →</a></h3>
-              <ul class="activity" id="topDivisions"></ul>
+              <h3>🏢 Oficinas <a href="#" id="newOfficeLink">＋ Nueva</a></h3>
+              <ul class="rows" id="officesPanel"></ul>
             </div>
             <div class="panel">
-              <h3>⚡ Acciones rápidas</h3>
-              <button class="qa blue" id="qaAgents">➕ Explorar todos los agentes</button>
-              <button class="qa purple" id="qaShuffle">🔀 Cambiar agentes en la oficina</button>
-              <button class="qa green" id="qaRandom">🎲 Abrir un agente al azar</button>
-              <button class="qa gray" id="qaDivisions">🗂️ Ver divisiones</button>
+              <h3>⚡ Acciones</h3>
+              <button class="qa blue" id="qaAdd">➕ Añadir agentes a esta oficina</button>
+              <button class="qa purple" id="qaEdit">✏️ Editar oficina</button>
+              <button class="qa green" id="qaExport">⬇️ Exportar oficinas</button>
+              <button class="qa gray" id="qaImport">⬆️ Importar oficinas</button>
+              <input type="file" id="importFile" accept="application/json" hidden>
             </div>
           </div>
         </div>
         <div class="bottom-grid">
-          <div class="panel"><h3>👥 Resumen del equipo</h3><div class="kpis" id="kpis"></div></div>
-          <div class="panel"><h3>📋 Divisiones con más agentes</h3><ul class="rows" id="bigDivisions"></ul></div>
-          <div class="panel"><h3>📁 Agentes destacados <a href="#agents">Ver todos →</a></h3><ul class="rows" id="featured"></ul></div>
+          <div class="panel"><h3>👥 Resumen de la oficina</h3><div class="kpis" id="kpis"></div></div>
+          <div class="panel"><h3>📋 Divisiones en esta oficina</h3><ul class="rows" id="officeDivisions"></ul></div>
+          <div class="panel"><h3>📁 Agentes de la oficina</h3><ul class="rows" id="officeAgents"></ul></div>
         </div>
       </section>
 
