@@ -154,7 +154,7 @@ function officeForm(office) {
     else { office.name = name; office.emoji = emoji; save(); closeModal(); renderAll(); }
   };
   $('#offSave').onclick = submit;
-  $('#offName').onkeydown = (e) => e.key === 'Enter' && submit();
+  $('#offName').addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
 }
 function confirmDelete(o) {
   if (store.offices.length <= 1) { dialog(`<h2>No se puede eliminar</h2><p>Debe quedar al menos una oficina. Crea otra antes de eliminar esta.</p>`); return; }
