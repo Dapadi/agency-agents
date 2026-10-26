@@ -60,6 +60,44 @@ function divisionCounts(ids) {
 // ---------- render ----------
 function renderAll() { renderSidebar(); renderBuilding(); renderHead(); renderOffice(); renderPanels(); if (location.hash === '#agents') renderAgents(); }
 
+// ---------- edificio sugerido ----------
+const SUGGESTED = [
+  ['Ingeniería', '💻', ['engineering','lsp','terminal','zk','data','identity','agentic','automation','blender']],
+  ['Producto, diseño y QA', '🎨', ['design','product','testing','project','technical']],
+  ['Marketing y contenido', '📣', ['marketing','paid']],
+  ['Ventas y cliente', '🛒', ['sales','support','customer','retail','hospitality']],
+  ['Seguridad y legal', '⚖️', ['security','legal']],
+  ['Negocio, finanzas y RR.HH.', '💼', ['finance','accounts','chief','loan','business','grant','esg','ma','supply','change','corporate','hr','recruitment','organizational','operations','real','resume','economy']],
+  ['Videojuegos y XR', '🎮', ['unreal','unity','godot','roblox','xr','game','level','narrative','visionos','macos']],
+  ['GIS, datos y salud', '🏥', ['gis','healthcare','medical','report']],
+  ['Academia e investigación', '🎓', ['academic','research','study','language','personal']],
+  ['Especializados', '🧪', ['specialized','agents','government']],
+];
+function suggestedPlan() {
+  const known = new Set(SUGGESTED.flatMap(f => f[2]));
+  return SUGGESTED.map(([name, emoji, prefixes], i) => {
+    const last = i === SUGGESTED.length - 1;
+    const ids = allAgents.filter(a => prefixes.includes(a.division) || (last && !known.has(a.division))).map(a => a.id);
+    return { name, emoji, ids };
+  });
+}
+function suggestBuilding() {
+  const plan = suggestedPlan();
+  const have = new Set(store.offices.map(o => o.name.toLowerCase()));
+  const toAdd = plan.filter(f => !have.has(f.name.toLowerCase()));
+  if (!toAdd.length) { dialog('<h2>Edificio ya generado</h2><p>Ya tienes todas las plantas sugeridas.</p>'); return; }
+  dialog(`<h2>Generar edificio sugerido</h2>
+    <p>Se añadirán <strong>${toAdd.length} plantas</strong> sobre las que ya tienes (no se toca ninguna oficina existente). Podrás editarlas después.</p>
+    <ul class="rows">${toAdd.map(f => `<li><span class="chip">${f.emoji}</span>${esc(f.name)}<span class="n">${f.ids.length} agentes</span></li>`).join('')}</ul>
+    <div class="form-actions"><button class="btn primary" id="sgYes">Generar plantas</button><button class="btn" id="sgNo">Cancelar</button></div>`);
+  $('#sgNo').onclick = closeModal;
+  $('#sgYes').onclick = () => {
+    toAdd.forEach(f => store.offices.push({ id: uid(), name: f.name, emoji: f.emoji, agents: f.ids.map(id => ({ id, note: '' })) }));
+    store.active = store.offices[store.offices.length - 1].id;
+    save(); closeModal(); renderAll(); go('building');
+  };
+}
+
 let newFloorId = null;
 function renderBuilding() {
   const el = $('#building'); if (!el) return;
@@ -282,6 +320,7 @@ $('#newOfficeBtn').onclick = () => officeForm();
 $('#newOfficeLink').onclick = (e) => { e.preventDefault(); officeForm(); };
 $('#qaAdd').onclick = openPicker;
 $('#bNew').onclick = () => officeForm();
+$('#bSuggest').onclick = suggestBuilding;
 $('#bAgents').onclick = () => go('agents', '');
 $('#qaEdit').onclick = () => officeForm(activeOffice());
 $('#qaExport').onclick = exportStore;
