@@ -94,6 +94,7 @@ function filterAgents() {
 
     filteredAgents = allAgents.filter(agent => {
         const matchesSearch = agent.title.toLowerCase().includes(searchTerm) ||
+                            (agent.description || '').toLowerCase().includes(searchTerm) ||
                             agent.division.toLowerCase().includes(searchTerm) ||
                             agent.id.toLowerCase().includes(searchTerm);
         const matchesDivision = !selectedDivision || agent.division === selectedDivision;
@@ -114,11 +115,12 @@ function displayAgents(agents) {
     agentsGrid.innerHTML = agents.map(agent => `
         <div class="agent-card" onclick="showModal('${agent.id}')">
             <div class="agent-header">
-                <h3 class="agent-title">${escapeHtml(agent.title)}</h3>
+                <h3 class="agent-title">${escapeHtml((agent.emoji ? agent.emoji + ' ' : '') + agent.title)}</h3>
                 <span class="agent-badge">${agent.division}</span>
             </div>
             <div class="agent-division">📁 ${agent.division.toUpperCase()}</div>
             <p class="agent-description">${escapeHtml(agent.content)}</p>
+            ${agent.vibe ? `<p class="agent-description"><em>${escapeHtml(agent.vibe)}</em></p>` : ''}
             <div class="agent-footer">
                 <button class="btn btn-primary">Ver Detalles</button>
                 <button class="btn btn-secondary" onclick="copyAgent(event, '${agent.id}')">Copiar</button>
@@ -138,7 +140,7 @@ function showModal(agentId) {
         .join('');
 
     modalBody.innerHTML = `
-        <h2>${escapeHtml(agent.title)}</h2>
+        <h2>${escapeHtml((agent.emoji ? agent.emoji + ' ' : '') + agent.title)}</h2>
         <div class="modal-meta">
             <div class="meta-item"><strong>ID:</strong> ${escapeHtml(agent.id)}</div>
             <div class="meta-item"><strong>División:</strong> ${escapeHtml(agent.division)}</div>
@@ -146,7 +148,7 @@ function showModal(agentId) {
         </div>
         ${frontmatterHtml ? '<h3 style="margin-top: 20px; color: var(--primary);">Metadatos</h3><div class="modal-meta">' + frontmatterHtml + '</div>' : ''}
         <h3 style="margin-top: 20px; color: var(--primary);">Contenido</h3>
-        <pre><code>${escapeHtml(agent.fullContent.substring(0, 2000))}</code></pre>
+        <pre><code>${escapeHtml(agent.fullContent.substring(0, 4000))}</code></pre>
         <button class="copy-btn" onclick="copyFullAgent('${agent.id}')">
             📋 Copiar Agente Completo
         </button>
