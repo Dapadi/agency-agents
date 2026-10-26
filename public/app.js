@@ -15,6 +15,16 @@ const byId = (id) => allAgents.find(a => a.id === id);
 const shuffle = (arr) => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
 const uid = () => 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const activeOffice = () => store.offices.find(o => o.id === store.active) || store.offices[0] || null;
+const RANK = { ok: 0, warn: 1, alert: 2 };
+const ST_LABEL = { ok: 'Todo en orden', warn: 'Revisar', alert: 'Problema' };
+function effStatus(o) {
+  let st = o.status || 'ok';
+  let issues = o.note ? [o.note] : [];
+  let flagged = 0;
+  o.agents.forEach(m => { if (m.flag && RANK[m.flag] > 0) { flagged++; if (RANK[m.flag] > RANK[st]) st = m.flag; } });
+  if (flagged) issues.push(`${flagged} ${flagged === 1 ? 'agente con aviso' : 'agentes con aviso'}`);
+  return { st, text: st === 'ok' ? '' : (issues.join(' · ') || ST_LABEL[st]) };
+}
 const inOffice = (o, id) => !!o && o.agents.some(x => x.id === id);
 
 // ---------- persistencia ----------
@@ -109,13 +119,14 @@ function renderBuilding() {
       return a ? `<span class="mini" title="${esc(a.title)}" style="--shirt:${SHIRTS[k % SHIRTS.length]};--hair:${HAIR[k % HAIR.length]}"><i class="h"></i><i class="b"></i></span>` : '';
     }).join('') + (o.agents.length > 7 ? `<span class="plus">+${o.agents.length - 7}</span>` : '');
     const n = o.agents.length;
-    return `<div class="floor-row ${o.id === newFloorId ? 'new' : ''} ${o.id === store.active ? 'current' : ''}" data-open="${esc(o.id)}" style="--tint:${['#ffb25a','#c58cff','#5ad1c8','#ff8fb0','#8fb8ff'][i % 5]}">
+    const E = effStatus(o);
+    return `<div class="floor-row st-${E.st} ${o.id === newFloorId ? 'new' : ''} ${o.id === store.active ? 'current' : ''}" data-open="${esc(o.id)}" style="--tint:${['#ffb25a','#c58cff','#5ad1c8','#ff8fb0','#8fb8ff'][i % 5]}">
       <div class="fside"><b>P${i + 1}</b><span class="fe">${esc(o.emoji)}</span><span class="fn">${esc(o.name)}</span></div>
       <div class="glass">
-        <div class="fact"><button data-floor-edit="${esc(o.id)}" title="Editar">✏️</button><button data-floor-del="${esc(o.id)}" title="Eliminar planta">🗑️</button></div>
+        <div class="fact"><button data-floor-cycle="${esc(o.id)}" title="Cambiar estado de la luz">🚦</button><button data-floor-edit="${esc(o.id)}" title="Editar">✏️</button><button data-floor-del="${esc(o.id)}" title="Eliminar planta">🗑️</button></div>
         <div class="people">${minis || '<span class="muted">Planta vacía</span>'}</div>
         <div class="deskline"></div>
-        <div class="flabel"><span class="fb">${esc(o.emoji)}</span><span><strong>${esc(o.name)}</strong><small>${n ? n + (n === 1 ? ' agente activo' : ' agentes activos') : 'Sin agentes'}</small></span></div>
+        <div class="flabel"><span class="fb">${esc(o.emoji)}</span><span><strong>${esc(o.name)}</strong><small>${n ? n + (n === 1 ? ' agente activo' : ' agentes activos') : 'Sin agentes'}</small>${E.st !== 'ok' ? `<small class="issue ${E.st}">${E.st === 'alert' ? '🔴' : '🟠'} ${esc(E.text)}</small>` : ''}</span></div>
       </div>
     </div>`;
   }).reverse().join('');
@@ -128,20 +139,21 @@ function renderBuilding() {
     <div class="street"><span>🌳</span><span class="lamp">💡</span><span>🚗</span><span>🌳</span><span class="lamp">💡</span><span>🚙</span><span>🌳</span></div>`;
   const total = store.offices.reduce((t, o) => t + o.agents.length, 0);
   $('#buildingInfo').textContent = `${store.offices.length} plantas · ${total} agentes`;
-  $('#bKpis').innerHTML = [['🏢', store.offices.length, 'Plantas'], ['🤖', total, 'Agentes asignados'], ['🌐', allAgents.length, 'Disponibles'], ['📍', activeOffice().name, 'Oficina activa']]
+  $('#bKpis').innerHTML = [['🏢', store.offices.length, 'Plantas'], ['🤖', total, 'Agentes asignados'], ['🚨', store.offices.filter(o => effStatus(o).st !== 'ok').length, 'Plantas a revisar'], ['📍', activeOffice().name, 'Oficina activa']]
     .map(([i, v, l]) => `<div class="kpi"><div>${i}</div><div class="v" style="${String(v).length > 6 ? 'font-size:15px' : ''}">${esc(String(v))}</div><div class="l">${l}</div></div>`).join('');
   newFloorId = null;
 }
 
 function renderSidebar() {
   $('#officeList').innerHTML = store.offices.map(o =>
-    `<a href="#home" class="office-item ${o.id === store.active ? 'active' : ''}" data-open="${esc(o.id)}"><span>${esc(o.emoji)}</span><span class="nm">${esc(o.name)}</span><b>${o.agents.length}</b></a>`).join('');
+    `<a href="#home" class="office-item ${o.id === store.active ? 'active' : ''}" data-open="${esc(o.id)}"><span>${esc(o.emoji)}</span><span class="nm">${esc(o.name)}</span>${effStatus(o).st !== 'ok' ? `<i class="sdot ${effStatus(o).st}"></i>` : ''}<b>${o.agents.length}</b></a>`).join('');
 }
 
 function renderHead() {
   const o = activeOffice();
   $('#officeHead').innerHTML = `<div class="oh-title"><span class="oh-emoji">${esc(o.emoji)}</span><div><h2>${esc(o.name)}</h2><p class="muted">${o.agents.length} ${o.agents.length === 1 ? 'agente' : 'agentes'} en esta oficina</p></div></div>
-    <div class="oh-actions"><button class="btn primary" data-act="add">➕ Añadir agentes</button><button class="btn" data-act="edit">✏️ Editar</button><button class="btn danger" data-act="delete">🗑️ Eliminar</button></div>`;
+    ${effStatus(o).st !== 'ok' ? `<div class="banner ${effStatus(o).st}">${effStatus(o).st === 'alert' ? '🔴 Problema' : '🟠 Revisar'}: ${esc(effStatus(o).text)}</div>` : ''}
+    <div class="oh-actions"><button class="btn" data-floor-cycle="${esc(o.id)}" title="Cambiar estado de la luz">🚦 Estado</button><button class="btn primary" data-act="add">➕ Añadir agentes</button><button class="btn" data-act="edit">✏️ Editar</button><button class="btn danger" data-act="delete">🗑️ Eliminar</button></div>`;
 }
 
 function renderOffice() {
@@ -150,10 +162,11 @@ function renderOffice() {
   const desks = o.agents.slice(0, limit).map((m, i) => {
     const a = byId(m.id);
     if (!a) return '';
-    return `<div class="desk" data-id="${esc(a.id)}" style="--shirt:${SHIRTS[i % SHIRTS.length]};--hair:${HAIR[i % HAIR.length]};--glow:${color(a)}">
+    const fl = m.flag && m.flag !== 'ok' ? m.flag : '';
+    return `<div class="desk ${fl ? 'flag-' + fl : ''}" data-id="${esc(a.id)}" style="--shirt:${SHIRTS[i % SHIRTS.length]};--hair:${HAIR[i % HAIR.length]};--glow:${color(a)}">
       <button class="x" data-remove="${esc(a.id)}" title="Quitar de la oficina">×</button>
       <div class="bubble"><span class="badge" style="background:${color(a)}33">${esc(a.emoji || '🤖')}</span>
-        <span class="txt"><strong>${esc(a.title)}</strong><small>${esc(m.note || a.vibe || a.description)}</small></span></div>
+        <span class="txt"><strong>${esc(a.title)}</strong><small>${esc(fl && m.issue ? '⚠ ' + m.issue : (m.note || a.vibe || a.description))}</small></span></div>
       <div class="worker"><div class="head"></div><div class="body"></div></div>
       <div class="desktop"><span class="laptop"></span><span class="mug"></span></div>
     </div>`;
@@ -216,18 +229,21 @@ function closeModal() { $('#modal').classList.remove('active'); document.body.st
 
 function officeForm(office) {
   const isNew = !office;
-  const cur = office || { name: '', emoji: OFFICE_EMOJIS[0] };
+  const cur = office || { name: '', emoji: OFFICE_EMOJIS[0], status: 'ok', note: '' };
   dialog(`<h2>${isNew ? 'Nueva oficina' : 'Editar oficina'}</h2>
     <label class="field">Nombre<input id="offName" value="${esc(cur.name)}" placeholder="Ej: Oficina de Instagram" maxlength="40"></label>
     <div class="field">Icono<div class="emoji-grid" id="emojiGrid">${OFFICE_EMOJIS.map(e => `<button type="button" class="emoji ${e === cur.emoji ? 'sel' : ''}" data-emoji="${e}">${e}</button>`).join('')}</div></div>
+    <label class="field">Luz de la planta<select id="offStatus"><option value="ok">🟢 Todo en orden</option><option value="warn">🟠 Revisar</option><option value="alert">🔴 Problema</option></select></label>
+    <label class="field">Motivo (se muestra en la planta)<input id="offNote" value="${esc(cur.note || '')}" placeholder="Ej: la campaña no publica desde ayer" maxlength="80"></label>
     <div class="form-actions"><button class="btn primary" id="offSave">${isNew ? 'Crear oficina' : 'Guardar'}</button></div>`);
+  $('#offStatus').value = cur.status || 'ok';
   let emoji = cur.emoji;
   $('#emojiGrid').onclick = (e) => { const b = e.target.closest('[data-emoji]'); if (!b) return; emoji = b.dataset.emoji; document.querySelectorAll('.emoji').forEach(x => x.classList.toggle('sel', x === b)); };
   $('#offName').focus();
   const submit = () => {
     const name = $('#offName').value.trim(); if (!name) { $('#offName').focus(); return; }
-    if (isNew) { const o = { id: uid(), name, emoji, agents: [] }; store.offices.push(o); store.active = o.id; newFloorId = o.id; save(); closeModal(); renderAll(); go('building'); }
-    else { office.name = name; office.emoji = emoji; save(); closeModal(); renderAll(); }
+    if (isNew) { const o = { id: uid(), name, emoji, agents: [], status: $('#offStatus').value, note: $('#offNote').value.trim() }; store.offices.push(o); store.active = o.id; newFloorId = o.id; save(); closeModal(); renderAll(); go('building'); }
+    else { office.name = name; office.emoji = emoji; office.status = $('#offStatus').value; office.note = $('#offNote').value.trim(); save(); closeModal(); renderAll(); }
   };
   $('#offSave').onclick = submit;
   $('#offName').addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
@@ -267,9 +283,16 @@ function showAgent(id) {
     ${a.vibe ? `<p class="muted"><em>${esc(a.vibe)}</em></p>` : ''}<p>${esc(a.description)}</p>
     <div class="field"><strong>Oficinas</strong><div class="chips">${store.offices.map(x => `<button class="btn ${inOffice(x, id) ? 'on' : ''}" data-mv="${esc(x.id)}">${esc(x.emoji)} ${esc(x.name)} ${inOffice(x, id) ? '✓' : ''}</button>`).join('')}</div></div>
     ${m ? `<label class="field">Texto del globo en "${esc(o.name)}"<input id="noteIn" value="${esc(m.note)}" placeholder="${esc(a.vibe || 'Texto personalizado')}" maxlength="80"></label>` : ''}
+    ${m ? `<div class="field"><strong>Estado en "${esc(o.name)}"</strong><div class="flag-row"><select id="flagSel"><option value="">🟢 Todo en orden</option><option value="warn">🟠 Revisar</option><option value="alert">🔴 Problema</option></select><input id="flagIssue" value="${esc(m.issue || '')}" placeholder="¿Qué pasa? (opcional)" maxlength="80"></div></div>` : ''}
     <pre>${esc((a.fullContent || '').slice(0, 4000))}</pre>
     <button class="btn" data-copyfull="${esc(a.id)}">📋 Copiar agente completo</button>`);
   const n = $('#noteIn'); if (n) n.onchange = () => setNote(id, n.value);
+  const fs = $('#flagSel'), fi = $('#flagIssue');
+  if (fs) {
+    fs.value = m.flag || '';
+    const upd = () => { m.flag = fs.value; m.issue = fi.value.trim(); save(); renderAll(); };
+    fs.onchange = upd; fi.onchange = upd;
+  }
   document.querySelector('.chips').onclick = (e) => { const b = e.target.closest('[data-mv]'); if (!b) return; toggleAgent(id, b.dataset.mv); showAgent(id); };
 }
 
@@ -284,7 +307,7 @@ function importStore(file) {
     try {
       const d = JSON.parse(fr.result);
       if (!d || !Array.isArray(d.offices) || !d.offices.every(o => o && typeof o.name === 'string' && Array.isArray(o.agents))) throw new Error('formato');
-      store = { offices: d.offices.map(o => ({ id: o.id || uid(), name: o.name, emoji: o.emoji || '🏢', agents: o.agents.map(x => ({ id: x.id, note: x.note || '' })) })), active: d.active };
+      store = { offices: d.offices.map(o => ({ id: o.id || uid(), name: o.name, emoji: o.emoji || '🏢', status: ['ok','warn','alert'].includes(o.status) ? o.status : 'ok', note: o.note || '', agents: o.agents.map(x => ({ id: x.id, note: x.note || '', flag: x.flag || '', issue: x.issue || '' })) })), active: d.active };
       if (!store.offices.length) throw new Error('vacío');
       if (!store.offices.some(o => o.id === store.active)) store.active = store.offices[0].id;
       save(); renderAll(); alert('✅ Oficinas importadas');
@@ -311,6 +334,7 @@ document.addEventListener('click', (e) => {
   if (t.closest('.modal-close') || t === $('#modal')) return closeModal();
   const act = t.closest('[data-act]'); if (act && act.dataset.act === 'more') { const o = activeOffice(); shown[o.id] = (shown[o.id] || PAGE) + PAGE; return renderOffice(); }
   if (act) { const o = activeOffice(); return act.dataset.act === 'add' ? openPicker() : act.dataset.act === 'edit' ? officeForm(o) : confirmDelete(o); }
+  const fc = t.closest('[data-floor-cycle]'); if (fc) { e.stopPropagation(); const o = store.offices.find(x => x.id === fc.dataset.floorCycle); if (o) { o.status = { ok: 'warn', warn: 'alert', alert: 'ok' }[o.status || 'ok']; save(); renderAll(); } return; }
   const fe = t.closest('[data-floor-edit]'); if (fe) { e.stopPropagation(); const o = store.offices.find(x => x.id === fe.dataset.floorEdit); return o && officeForm(o); }
   const fd = t.closest('[data-floor-del]'); if (fd) { e.stopPropagation(); const o = store.offices.find(x => x.id === fd.dataset.floorDel); return o && confirmDelete(o); }
   if (t.closest('#addFloor')) return officeForm();
