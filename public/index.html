@@ -1,104 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agency Agents — Tu equipo especializado de IA</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency ControlHub</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="site">
-        <!-- Navigation -->
-        <nav class="nav">
-            <div class="nav-inner">
-                <div class="logo">Agency</div>
-                <div class="nav-stats">
-                    <span class="stat-badge"><span id="totalAgents">282</span> agentes</span>
-                    <span class="stat-badge"><span id="totalDivisions">0</span> divisiones</span>
-                </div>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-logo">✺</span><span>Agency ControlHub</span></div>
+      <nav class="nav" id="nav">
+        <a href="#building" data-view="building"><span class="ico">🏙️</span>Edificio</a>
+        <a href="#home" data-view="home"><span class="ico">🏢</span>Mi oficina</a>
+        <a href="#agents" data-view="agents"><span class="ico">🤖</span>Agentes<b id="navAgents">0</b></a>
+        <a href="#divisions" data-view="divisions"><span class="ico">🗂️</span>Divisiones<b id="navDivisions">0</b></a>
+      </nav>
+      <div class="side-title">Oficinas <button class="icon-btn" id="newOfficeBtn" title="Nueva oficina">＋</button></div>
+      <div class="office-list" id="officeList"></div>
+      <div class="side-card"><div class="muted">Hoy</div><div class="clock" id="clock">--:--</div><div id="greeting">Bienvenido</div></div>
+    </aside>
+
+    <header class="topbar">
+      <div class="tagline">Tus oficinas de agentes de IA</div>
+      <label class="search"><span>🔍</span><input id="searchInput" type="search" placeholder="Buscar agentes, divisiones…" autocomplete="off"></label>
+      <div class="status"><span class="dot"></span>Guardado en este navegador</div>
+    </header>
+
+    <main class="main">
+      <section id="view-building" class="view" hidden>
+        <div class="toolbar"><h2>🏙️ Edificio</h2><span class="muted" id="buildingInfo"></span></div>
+        <div class="building-grid">
+          <div class="building-wrap"><div class="building" id="building"></div></div>
+          <div class="right-col">
+            <div class="panel"><h3>📊 Resumen</h3><div class="kpis" id="bKpis"></div></div>
+            <div class="panel">
+              <h3>⚡ Acciones</h3>
+              <button class="qa blue" id="bNew">➕ Nueva planta (oficina)</button>
+              <button class="qa purple" id="bSuggest">🏗️ Generar edificio sugerido</button>
+              <button class="qa gray" id="bAgents">🤖 Ver todos los agentes</button>
             </div>
-        </nav>
-
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-inner">
-                <h1>Tu equipo especializado de IA</h1>
-                <p class="hero-subtitle">282 agentes profesionales, 63 especialidades, una dashboard para controlarlos todos</p>
-
-                <!-- Live Search Thing -->
-                <div class="search-hero">
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Busca por nombre, especialidad..."
-                        class="search-input-hero"
-                        aria-label="Buscar agentes"
-                    >
-                    <button class="search-btn" aria-label="Buscar">
-                        <span>→</span>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Stats Section -->
-        <section class="stats-section">
-            <div class="section-inner">
-                <div class="stats-grid" id="statsContainer">
-                    <div class="stat-card">
-                        <div class="stat-number">282</div>
-                        <div class="stat-label">Agentes instalados</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">63</div>
-                        <div class="stat-label">Divisiones especializadas</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">100%</div>
-                        <div class="stat-label">Listo para usar</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Controls Section -->
-        <section class="filter-section">
-            <div class="section-inner">
-                <div class="filter-bar">
-                    <label for="divisionFilter" class="filter-label">Filtrar por división:</label>
-                    <select id="divisionFilter" class="division-select">
-                        <option value="">Todas las divisiones</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-
-        <!-- Agents Section -->
-        <section class="agents-section">
-            <div class="section-inner">
-                <div class="agents-grid" id="agentsGrid">
-                    <div class="loading">Cargando agentes...</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="section-inner">
-                <p>Agency Agents Dashboard — Una forma más inteligente de gestionar tus agentes de IA</p>
-            </div>
-        </footer>
-    </div>
-
-    <!-- Modal -->
-    <div id="modal" class="modal" role="dialog" aria-modal="true">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <button class="modal-close" aria-label="Cerrar">&times;</button>
-            <div id="modalBody"></div>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <script src="app.js"></script>
+      <section id="view-home" class="view">
+        <div class="office-head" id="officeHead"></div>
+        <div class="home-grid">
+          <div class="office" id="office"></div>
+          <div class="right-col">
+            <div class="panel">
+              <h3>🏢 Oficinas <a href="#" id="newOfficeLink">＋ Nueva</a></h3>
+              <ul class="rows" id="officesPanel"></ul>
+            </div>
+            <div class="panel">
+              <h3>⚡ Acciones</h3>
+              <button class="qa blue" id="qaAdd">➕ Añadir agentes a esta oficina</button>
+              <button class="qa purple" id="qaEdit">✏️ Editar oficina</button>
+              <button class="qa green" id="qaExport">⬇️ Exportar oficinas</button>
+              <button class="qa gray" id="qaImport">⬆️ Importar oficinas</button>
+              <input type="file" id="importFile" accept="application/json" hidden>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-grid">
+          <div class="panel"><h3>👥 Resumen de la oficina</h3><div class="kpis" id="kpis"></div></div>
+          <div class="panel"><h3>📋 Divisiones en esta oficina</h3><ul class="rows" id="officeDivisions"></ul></div>
+          <div class="panel"><h3>📁 Agentes de la oficina</h3><ul class="rows" id="officeAgents"></ul></div>
+        </div>
+      </section>
+
+      <section id="view-agents" class="view" hidden>
+        <div class="toolbar">
+          <h2>Agentes</h2>
+          <select id="divisionFilter"><option value="">Todas las divisiones</option></select>
+          <span class="muted" id="resultCount"></span>
+        </div>
+        <div class="agents-grid" id="agentsGrid"></div>
+      </section>
+
+      <section id="view-divisions" class="view" hidden>
+        <div class="toolbar"><h2>Divisiones</h2></div>
+        <div class="div-grid" id="divGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button class="modal-close" aria-label="Cerrar">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>

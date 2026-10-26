@@ -13,6 +13,14 @@ const userAgentsDir = path.join(process.env.HOME || process.env.USERPROFILE || '
 const agentsDir = process.env.AGENTS_DIR
   || (fs.existsSync(repoAgentsDir) ? repoAgentsDir : userAgentsDir);
 
+// Traducciones al español (nombre, descripción y lema) por id de agente
+let translations = {};
+try {
+  translations = JSON.parse(fs.readFileSync(path.join(__dirname, '../agents-es.json'), 'utf-8'));
+} catch (err) {
+  console.error('No se pudieron cargar las traducciones:', err.message);
+}
+
 // Middleware
 app.use(express.json());
 const publicDir = path.join(__dirname, '../public');
@@ -31,18 +39,22 @@ async function loadAgents() {
           const content = await fs.readFile(filePath, 'utf-8');
           const { data, content: markdown } = matter(content);
 
+          const id = file.replace('.md', '');
+          const es = translations[id] || {};
           agents.push({
-            id: file.replace('.md', ''),
+            id,
             filename: file,
-            title: data.name || data.title || file.replace('.md', ''),
+            title: es.name || data.name || data.title || id,
+            originalTitle: data.name || data.title || id,
             category: data.category || extractDivision(file),
             emoji: data.emoji || '',
             color: data.color || '',
-            vibe: data.vibe || '',
+            vibe: es.vibe || data.vibe || '',
             division: extractDivision(file),
-            description: data.description || '',
+            description: es.description || data.description || '',
+            originalDescription: data.description || '',
             frontmatter: data,
-            content: data.description || markdown.substring(0, 300) + '...',
+            content: es.description || data.description || markdown.substring(0, 300) + '...',
             fullContent: markdown
           });
         } catch (err) {
