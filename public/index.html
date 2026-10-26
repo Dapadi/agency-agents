@@ -3,54 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agency ControlHub</title>
+  <title>Claude ControlHub</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="shell">
     <aside class="sidebar">
-      <div class="brand"><span class="brand-logo">✺</span><span>Agency ControlHub</span></div>
+      <div class="brand"><span class="brand-logo">✺</span><span>Claude ControlHub</span></div>
       <nav class="nav" id="nav">
         <a href="#home" data-view="home"><span class="ico">🏠</span>Inicio</a>
         <a href="#agents" data-view="agents"><span class="ico">🤖</span>Agentes<b id="navAgents">0</b></a>
-        <a href="#divisions" data-view="divisions"><span class="ico">🗂️</span>Divisiones<b id="navDivisions">0</b></a>
+        <a href="#automatizaciones" data-view="soon"><span class="ico">⚡</span>Automatizaciones<b>4</b></a>
+        <a href="#tareas" data-view="soon"><span class="ico">☰</span>Tareas<b>3</b></a>
+        <a href="#proyectos" data-view="soon"><span class="ico">📁</span>Proyectos<b>5</b></a>
+        <a href="#artefactos" data-view="soon"><span class="ico">🧊</span>Artefactos<b>12</b></a>
+        <a href="#mcp" data-view="soon"><span class="ico">🔌</span>MCP &amp; Conectores<b>6</b></a>
+        <a href="#skills" data-view="soon"><span class="ico">✳️</span>Skills<b>4</b></a>
+        <a href="#config" data-view="soon"><span class="ico">⚙️</span>Configuración</a>
+        <a href="#divisions" data-view="divisions" class="hidden-nav"></a>
       </nav>
       <div class="side-card">
-        <div class="muted">Hoy</div>
-        <div class="clock" id="clock">--:--</div>
-        <div id="greeting">Bienvenido</div>
+        <div class="today"><span class="muted">Hoy</span><span class="sun">☀️</span></div>
+        <div class="clock"><span>🕘</span> <span id="clock">--:--</span></div>
+        <div id="greeting">Buenos días, David</div>
+        <small class="muted">Tienes 3 tareas pendientes</small>
       </div>
-      <div class="side-card ok"><span class="dot"></span><div>Todos los sistemas operativos<br><small id="sourceInfo" class="muted">Cargando…</small></div></div>
+      <div class="side-card sel"><small class="muted">Proyecto activo</small><div class="select-fake">ControlHub <span>⌄</span></div></div>
+      <div class="side-card ok"><span class="dot"></span><div>Todos los sistemas operativos<br><small id="sourceInfo" class="muted">Laptop · Torre · Tailscale</small></div></div>
     </aside>
 
     <header class="topbar">
       <div class="tagline">Tu oficina de agentes de IA</div>
-      <label class="search"><span>🔍</span><input id="searchInput" type="search" placeholder="Buscar agentes, divisiones…" autocomplete="off"></label>
+      <label class="search"><span>🔍</span><input id="searchInput" type="search" placeholder="Buscar agentes, tareas, proyectos…" autocomplete="off"></label>
       <div class="status"><span class="dot"></span>Sistema activo</div>
+      <div class="bell">🔔<i>3</i></div>
+      <div class="user"><span class="avatar">DP</span>David Pastor <span class="muted">⌄</span></div>
     </header>
 
     <main class="main">
       <section id="view-home" class="view">
         <div class="home-grid">
-          <div class="office" id="office" aria-label="Oficina de agentes"></div>
+          <div class="office"><img src="office.jpg" alt="Oficina de agentes de IA"></div>
           <div class="right-col">
             <div class="panel">
-              <h3>⚙️ Divisiones principales <a href="#divisions">Ver todas →</a></h3>
-              <ul class="activity" id="topDivisions"></ul>
+              <h3>🕘 Actividad reciente <a href="#agents">Ver todas →</a></h3>
+              <ul class="activity" id="activity"></ul>
             </div>
             <div class="panel">
               <h3>⚡ Acciones rápidas</h3>
-              <button class="qa blue" id="qaAgents">➕ Explorar todos los agentes</button>
-              <button class="qa purple" id="qaShuffle">🔀 Cambiar agentes en la oficina</button>
-              <button class="qa green" id="qaRandom">🎲 Abrir un agente al azar</button>
-              <button class="qa gray" id="qaDivisions">🗂️ Ver divisiones</button>
+              <button class="qa blue" data-go="agents">➕ Crear nuevo agente</button>
+              <button class="qa purple" data-go="automatizaciones">📅 Programar automatización</button>
+              <button class="qa green" data-go="tareas">☰ Ver todas las tareas</button>
+              <button class="qa gray" data-go="artefactos">🧊 Abrir artefactos</button>
+              <button class="qa gray" data-go="mcp">🔌 Gestionar MCP</button>
             </div>
           </div>
         </div>
         <div class="bottom-grid">
           <div class="panel"><h3>👥 Resumen del equipo</h3><div class="kpis" id="kpis"></div></div>
-          <div class="panel"><h3>📋 Divisiones con más agentes</h3><ul class="rows" id="bigDivisions"></ul></div>
-          <div class="panel"><h3>📁 Agentes destacados <a href="#agents">Ver todos →</a></h3><ul class="rows" id="featured"></ul></div>
+          <div class="panel"><h3>☰ Tareas pendientes <a href="#tareas">Ver todas →</a></h3><ul class="rows" id="tasks"></ul></div>
+          <div class="panel"><h3>📁 Proyectos recientes <a href="#proyectos">Ver todos →</a></h3><ul class="rows" id="projects"></ul></div>
         </div>
       </section>
 
@@ -66,6 +78,11 @@
       <section id="view-divisions" class="view" hidden>
         <div class="toolbar"><h2>Divisiones</h2></div>
         <div class="div-grid" id="divGrid"></div>
+      </section>
+
+      <section id="view-soon" class="view" hidden>
+        <div class="toolbar"><h2 id="soonTitle">Próximamente</h2></div>
+        <div class="panel">Esta sección todavía no está disponible.</div>
       </section>
     </main>
   </div>
